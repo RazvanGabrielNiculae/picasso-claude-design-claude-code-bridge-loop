@@ -356,15 +356,15 @@ flowchart LR
 flowchart TD
     subgraph TOK["Token Efficiency"]
         direction LR
-        P01[Structured prompts] --> P04[Lazy section reads] --> P05[Model routing] --> P06[Adaptive rendering] --> P07[Zero-context subagent]
+        P01[Structured] --> P04[Lazy reads] --> P05[Model route] --> P06[Adaptive] --> P07[Zero-ctx]
     end
     subgraph DED["Dedup and Cache"]
         direction LR
-        P02[Content-hash cache] --> P03[Fingerprint dedup] --> P08[Idempotency check]
+        P02[Hash cache] --> P03[Fingerprint] --> P08[Idempotent]
     end
     subgraph RES["Resilience"]
         direction LR
-        P09[Context backpressure]
+        P09[Backpressure]
     end
 
     style P01 fill:#0d1f2d,stroke:#5ce1ff,color:#8eecff
