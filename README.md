@@ -153,7 +153,7 @@ flowchart LR
     subgraph CC["Claude Code"]
         PC[picasso] --> PDL[pdl-conductor]
         HK[6 hooks] --> PDL
-        PDL --> DM[DESIGN.md]
+        PDL --> DM["DESIGN.md"]
     end
     subgraph MCP["MCP"]
         CMCP[chrome-mcp]
@@ -199,14 +199,14 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    S([picasso]) --> LOOP[design-loop ⭐]
+    S([picasso]) --> LOOP[design-loop]
     S --> SOLO[design-solo]
     S --> CRIT[design-critique]
     S --> REF[design-reference]
-    S --> SRC[from-site / from-figma]
-    LOOP --> AP{APPROVED?}
+    S --> SRC[from-site or from-figma]
+    LOOP --> AP{APPROVED}
     AP -- "polish" --> ITER[design-iterate]
-    AP -- "ship" --> DONE([✅ Done])
+    AP -- "ship" --> DONE([Done])
     ITER --> DONE
 
     style S fill:#ff2d95,stroke:#ff4fa8,color:#fff
@@ -274,13 +274,13 @@ flowchart LR
 ## 🏆 Gate scoring — mathematically verified fidelity
 
 ```mermaid
-pie title Gate Score Weights (total = 10.0)
-    "🎨 Colors — ΔE CIE2000" : 25
-    "🔤 Typography" : 20
-    "📐 Layout & Spacing" : 20
-    "🧩 Components" : 15
-    "🎬 Motion" : 10
-    "📱 Responsive" : 10
+pie title Gate Score Weights
+    "Colors - ΔE CIE2000" : 25
+    "Typography" : 20
+    "Layout and Spacing" : 20
+    "Components" : 15
+    "Motion" : 10
+    "Responsive" : 10
 ```
 
 | Criterion | Weight | How it's measured |
@@ -302,7 +302,7 @@ pie title Gate Score Weights (total = 10.0)
 
 ```mermaid
 flowchart LR
-    N([NORMAL]) -- ">60%" --> W([WARN]) -- ">75%" --> D([DEGRADE]) -- ">85%" --> SW([SWITCH]) -- ">95%" --> P([PAUSED])
+    N([NORMAL]) -- "60pct" --> W([WARN]) -- "75pct" --> D([DEGRADE]) -- "85pct" --> SW([SWITCH]) -- "95pct" --> P([PAUSED])
 
     style N fill:#0d2e1a,stroke:#4caf50,color:#7cf0a0
     style W fill:#2a2000,stroke:#ffd83d,color:#ffd83d
@@ -334,7 +334,9 @@ flowchart LR
     style K2 fill:#0d1f2d,stroke:#5ce1ff,color:#8eecff
     style K3 fill:#1a1a2e,stroke:#7cf0a0,color:#7cf0a0
     style K4 fill:#2a2000,stroke:#ffd83d,color:#ffd83d
-    linkStyle 0,1,2 stroke:#ffd83d,stroke-width:2px
+    linkStyle 0 stroke:#ffd83d,stroke-width:2px
+    linkStyle 1 stroke:#ffd83d,stroke-width:2px
+    linkStyle 2 stroke:#ffd83d,stroke-width:2px
 ```
 
 | # | Principle | What the loop does |
@@ -362,9 +364,6 @@ flowchart LR
         P09[Context backpressure]
     end
 
-    style TOK fill:#0a1520,stroke:#5ce1ff,color:#8eecff
-    style DED fill:#1a1420,stroke:#ff2d95,color:#ffa2cf
-    style RES fill:#0d1f1a,stroke:#7cf0a0,color:#7cf0a0
     style P01 fill:#0d1f2d,stroke:#5ce1ff,color:#8eecff
     style P04 fill:#0d1f2d,stroke:#5ce1ff,color:#8eecff
     style P05 fill:#0d1f2d,stroke:#5ce1ff,color:#8eecff
@@ -374,7 +373,13 @@ flowchart LR
     style P03 fill:#2a1420,stroke:#ff2d95,color:#ffa2cf
     style P08 fill:#2a1420,stroke:#ff2d95,color:#ffa2cf
     style P09 fill:#0d2e1a,stroke:#7cf0a0,color:#7cf0a0
-    linkStyle 0,1,2,3,4,5,6 stroke:#ffd83d,stroke-width:1.5px
+    linkStyle 0 stroke:#ffd83d,stroke-width:1.5px
+    linkStyle 1 stroke:#ffd83d,stroke-width:1.5px
+    linkStyle 2 stroke:#ffd83d,stroke-width:1.5px
+    linkStyle 3 stroke:#ffd83d,stroke-width:1.5px
+    linkStyle 4 stroke:#ffd83d,stroke-width:1.5px
+    linkStyle 5 stroke:#ffd83d,stroke-width:1.5px
+    linkStyle 6 stroke:#ffd83d,stroke-width:1.5px
 ```
 
 | # | Pattern | Problem it solves | Impact |
@@ -397,10 +402,10 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    AD([autodetect]) --> PRE[pre-round] --> LOOP((round)) --> POST[post-round]
+    AD([autodetect]) --> PRE[pre-round] --> LOOP([round]) --> POST[post-round]
     LOOP -- plateau --> STAG[stagnation]
-    LOOP -- "✅" --> APP[approved]
-    LOOP -- "❌" --> FAIL[failed]
+    LOOP -- pass --> APP[approved]
+    LOOP -- fail --> FAIL[failed]
 
     style AD fill:#2a1420,stroke:#ff2d95,color:#ffa2cf
     style PRE fill:#0d1f2d,stroke:#5ce1ff,color:#8eecff
