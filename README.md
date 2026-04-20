@@ -379,7 +379,6 @@ flowchart LR
     linkStyle 3 stroke:#ffd83d,stroke-width:1.5px
     linkStyle 4 stroke:#ffd83d,stroke-width:1.5px
     linkStyle 5 stroke:#ffd83d,stroke-width:1.5px
-    linkStyle 6 stroke:#ffd83d,stroke-width:1.5px
 ```
 
 | # | Pattern | Problem it solves | Impact |
