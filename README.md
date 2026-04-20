@@ -318,6 +318,24 @@ flowchart LR
 > Not guidelines. Mechanisms. Every one maps to a concrete component in the conductor.
 > Inspired by [Andrej Karpathy](https://github.com/karpathy)'s public notes on LLM coding pitfalls — specifically his observations on silent assumptions, minimal code, surgical edits, and goal-declared targets.
 
+```mermaid
+flowchart LR
+    K1[Think First] --> K2[Simplicity] --> K3[Surgical Edits] --> K4[Goal-Led State]
+    K1 --- A["ASSUMPTIONS block\nbefore Round 0"]
+    K2 --- B["min code · no refactor\nno speculative features"]
+    K3 --- C["sha256 idempotency\nchanged sections only"]
+    K4 --- D["current → target\nnot vague feedback"]
+
+    style K1 fill:#2a1420,stroke:#ff2d95,color:#ffa2cf
+    style K2 fill:#0d1f2d,stroke:#5ce1ff,color:#8eecff
+    style K3 fill:#1a1a2e,stroke:#7cf0a0,color:#7cf0a0
+    style K4 fill:#2a2000,stroke:#ffd83d,color:#ffd83d
+    style A fill:#1a0d12,stroke:#ff2d95,color:#b9a3ad
+    style B fill:#060f18,stroke:#5ce1ff,color:#b9a3ad
+    style C fill:#0d1020,stroke:#7cf0a0,color:#b9a3ad
+    style D fill:#181200,stroke:#ffd83d,color:#b9a3ad
+```
+
 | # | Principle | What the loop does |
 |---|---|---|
 | `01` | 🤔 **Think First** | Inferred tokens surface as an explicit `ASSUMPTIONS:` block *before* the first browser call. You correct inline — zero silent assumptions. `→ ASSUMPTIONS: colors · typography · components · brand` |
@@ -330,6 +348,35 @@ flowchart LR
 ## 🧩 Nine orchestration patterns
 
 > Every pattern exists to solve a specific failure mode in naive "loop and hope" approaches.
+
+```mermaid
+flowchart TD
+    subgraph TOK["⚡ Token Efficiency"]
+        direction LR
+        P01[Structured prompts] ~~~ P04[Lazy section reads] ~~~ P05[Model routing] ~~~ P06[Adaptive rendering] ~~~ P07[Zero-context subagent]
+    end
+    subgraph DED["🔏 Dedup & Cache"]
+        direction LR
+        P02[Content-hash cache] ~~~ P03[Fingerprint dedup] ~~~ P08[Idempotency check]
+    end
+    subgraph RES["🛡️ Resilience"]
+        direction LR
+        P09[Context backpressure]
+    end
+
+    style TOK fill:#0a1520,stroke:#5ce1ff,color:#8eecff
+    style DED fill:#1a1420,stroke:#ff2d95,color:#ffa2cf
+    style RES fill:#0d1f1a,stroke:#7cf0a0,color:#7cf0a0
+    style P01 fill:#0d1f2d,stroke:#5ce1ff,color:#8eecff
+    style P04 fill:#0d1f2d,stroke:#5ce1ff,color:#8eecff
+    style P05 fill:#0d1f2d,stroke:#5ce1ff,color:#8eecff
+    style P06 fill:#0d1f2d,stroke:#5ce1ff,color:#8eecff
+    style P07 fill:#0d1f2d,stroke:#5ce1ff,color:#8eecff
+    style P02 fill:#2a1420,stroke:#ff2d95,color:#ffa2cf
+    style P03 fill:#2a1420,stroke:#ff2d95,color:#ffa2cf
+    style P08 fill:#2a1420,stroke:#ff2d95,color:#ffa2cf
+    style P09 fill:#0d2e1a,stroke:#7cf0a0,color:#7cf0a0
+```
 
 | # | Pattern | Problem it solves | Impact |
 |---|---|---|---|
