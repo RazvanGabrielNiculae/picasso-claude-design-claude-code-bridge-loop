@@ -174,6 +174,14 @@ flowchart LR
     style CMCP fill:#0a1520,stroke:#5ce1ff,color:#8eecff
     style WMCP fill:#0a1520,stroke:#5ce1ff,color:#8eecff
     style CD fill:#0d2e1a,stroke:#7cf0a0,color:#7cf0a0
+    linkStyle 0 stroke:#ffd83d,stroke-width:2px
+    linkStyle 1 stroke:#ffd83d,stroke-width:2px
+    linkStyle 2 stroke:#ffd83d,stroke-width:2px
+    linkStyle 3 stroke:#ffd83d,stroke-width:2px
+    linkStyle 4 stroke:#ffd83d,stroke-width:2px
+    linkStyle 5 stroke:#ffd83d,stroke-width:2px
+    linkStyle 6 stroke:#ffd83d,stroke-width:2px
+    linkStyle 7 stroke:#ffd83d,stroke-width:2px
 ```
 
 | Tag | Component | Role |
