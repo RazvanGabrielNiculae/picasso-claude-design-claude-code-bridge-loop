@@ -26,7 +26,7 @@ if [ -d "$PDL_DIR" ]; then
   PDL_SIZE_MB=$(du -sm "$PDL_DIR" 2>/dev/null | awk '{print $1}')
   if [ -n "$PDL_SIZE_MB" ] && [ "$PDL_SIZE_MB" -ge "$MAX_PDL_MB" ]; then
     echo "PDL pre-round: .pdl/ is ${PDL_SIZE_MB}MB — exceeds ${MAX_PDL_MB}MB limit." >&2
-    echo "Run 'rm -rf $PDL_DIR/round-*/impl-*.png' to prune large previews." >&2
+    echo "Run: rm -rf \"${PDL_DIR}/round-*/impl-*.png\"  (prune large previews)" >&2
     exit 1
   fi
   if [ -n "$PDL_SIZE_MB" ] && [ "$PDL_SIZE_MB" -ge "$WARN_PDL_MB" ]; then
