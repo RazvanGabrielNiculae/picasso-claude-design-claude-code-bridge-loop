@@ -353,14 +353,17 @@ flowchart LR
 > Every pattern exists to solve a specific failure mode in naive "loop and hope" approaches.
 
 ```mermaid
-flowchart LR
+flowchart TD
     subgraph TOK["Token Efficiency"]
+        direction LR
         P01[Structured prompts] --> P04[Lazy section reads] --> P05[Model routing] --> P06[Adaptive rendering] --> P07[Zero-context subagent]
     end
     subgraph DED["Dedup and Cache"]
+        direction LR
         P02[Content-hash cache] --> P03[Fingerprint dedup] --> P08[Idempotency check]
     end
     subgraph RES["Resilience"]
+        direction LR
         P09[Context backpressure]
     end
 
