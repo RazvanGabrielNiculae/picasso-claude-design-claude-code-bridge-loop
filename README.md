@@ -58,7 +58,7 @@ picasso-bridge verify --smoke
 
 ```mermaid
 flowchart LR
-    A([/picasso]) --> B[ASSUMPTIONS] --> C[DESIGN.md] --> D[Claude Design] --> E[Implement] --> F[Render] --> G[Score] --> H{Gate ≥ 9.0}
+    A([picasso]) --> B[ASSUMPTIONS] --> C[DESIGN.md] --> D[Claude Design] --> E[Implement] --> F[Render] --> G[Score] --> H{Gate 9.0}
     H -- "✅" --> I([APPROVED])
     H -- "📉" --> J([STAGNATED])
     H -- "🔄 refine" --> D
@@ -151,9 +151,9 @@ flowchart LR
 ```mermaid
 flowchart LR
     subgraph CC["Claude Code"]
-        PC[/picasso] --> PDL[pdl-conductor]
+        PC[picasso] --> PDL[pdl-conductor]
         HK[6 hooks] --> PDL
-        PDL <--> DM[DESIGN.md]
+        PDL --> DM[DESIGN.md]
     end
     subgraph MCP["MCP"]
         CMCP[chrome-mcp]
@@ -161,7 +161,8 @@ flowchart LR
     end
     CD[Claude Design]
 
-    PDL --> CMCP <--> CD
+    PDL --> CMCP --> CD
+    CD --> CMCP --> PDL
     PDL --> WMCP
 
     style CC fill:#1b0d14,stroke:#ff2d95,color:#ffa2cf
@@ -190,13 +191,13 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    S([/picasso]) --> LOOP[--design-loop ⭐]
-    S --> SOLO[--design-solo]
-    S --> CRIT[--design-critique]
-    S --> REF[--design-reference]
-    S --> SRC["--from-site / --from-figma"]
+    S([picasso]) --> LOOP[design-loop ⭐]
+    S --> SOLO[design-solo]
+    S --> CRIT[design-critique]
+    S --> REF[design-reference]
+    S --> SRC[from-site / from-figma]
     LOOP --> AP{APPROVED?}
-    AP -- "polish" --> ITER[--design-iterate]
+    AP -- "polish" --> ITER[design-iterate]
     AP -- "ship" --> DONE([✅ Done])
     ITER --> DONE
 
