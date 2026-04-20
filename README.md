@@ -56,6 +56,33 @@ picasso-bridge verify --smoke
 
 ## 🔁 How it works
 
+```mermaid
+flowchart TD
+    A([" 🎨 /picasso 'brief' "]) --> B["📋 ASSUMPTIONS\nsurface inferred tokens\ncorrect inline before Round 0"]
+    B --> C["📄 DESIGN.md\n9-section design spec\ncolors · type · layout · motion"]
+    C --> D["✏️ Claude Design\nstructured prompt →\nvisual proposal + screenshot"]
+    D --> E["⚙️ Implement\nzero-context subagent\nonly changed sections · ~200 tok"]
+    E --> F["📸 Render\ndesktop always\nmobile if responsive < 8.0"]
+    F --> G["🎯 Score\nΔE colors 25% · type 20%\nlayout 20% · motion 10%"]
+    G --> H{"Gate ≥ 9.0?"}
+    H -- "✅ YES" --> I([" ✅ APPROVED "])
+    H -- "📉 plateau" --> J([" 📉 STAGNATED "])
+    H -- "🔄 NO · refine" --> K["📋 Gaps\n3 lines max\ncurrent → target"]
+    K --> D
+
+    style A fill:#ff2d95,stroke:#ff4fa8,color:#fff
+    style B fill:#2a1420,stroke:#ff2d95,color:#ffa2cf
+    style C fill:#0d1f2d,stroke:#5ce1ff,color:#8eecff
+    style D fill:#0d1f2d,stroke:#5ce1ff,color:#8eecff
+    style E fill:#1a1a2e,stroke:#7cf0a0,color:#7cf0a0
+    style F fill:#1a1a2e,stroke:#7cf0a0,color:#7cf0a0
+    style G fill:#2a2000,stroke:#ffd83d,color:#ffd83d
+    style H fill:#2a2000,stroke:#ffd83d,color:#fff59d
+    style I fill:#0d2e1a,stroke:#4caf50,color:#7cf0a0
+    style J fill:#2e1a0d,stroke:#ff9800,color:#ffb14a
+    style K fill:#2a1420,stroke:#ff2d95,color:#ffa2cf
+```
+
 1. **Brief** → Describe your design goal in plain language (`/picasso --design-loop "hero for B2B SaaS"`)
 2. **ASSUMPTIONS** → Picasso surfaces inferred tokens as an explicit block before any browser call — you correct inline
 3. **DESIGN.md** → Structured 9-section spec is generated: colors · typography · layout · motion · responsive · accessibility
