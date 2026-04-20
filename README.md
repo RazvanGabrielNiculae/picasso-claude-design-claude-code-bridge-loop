@@ -57,18 +57,11 @@ picasso-bridge verify --smoke
 ## 🔁 How it works
 
 ```mermaid
-flowchart TD
-    A([" 🎨 /picasso 'brief' "]) --> B["📋 ASSUMPTIONS\nsurface inferred tokens\ncorrect inline before Round 0"]
-    B --> C["📄 DESIGN.md\n9-section design spec\ncolors · type · layout · motion"]
-    C --> D["✏️ Claude Design\nstructured prompt →\nvisual proposal + screenshot"]
-    D --> E["⚙️ Implement\nzero-context subagent\nonly changed sections · ~200 tok"]
-    E --> F["📸 Render\ndesktop always\nmobile if responsive < 8.0"]
-    F --> G["🎯 Score\nΔE colors 25% · type 20%\nlayout 20% · motion 10%"]
-    G --> H{"Gate ≥ 9.0?"}
-    H -- "✅ YES" --> I([" ✅ APPROVED "])
-    H -- "📉 plateau" --> J([" 📉 STAGNATED "])
-    H -- "🔄 NO · refine" --> K["📋 Gaps\n3 lines max\ncurrent → target"]
-    K --> D
+flowchart LR
+    A([/picasso]) --> B[ASSUMPTIONS] --> C[DESIGN.md] --> D[Claude Design] --> E[Implement] --> F[Render] --> G[Score] --> H{Gate ≥ 9.0}
+    H -- "✅" --> I([APPROVED])
+    H -- "📉" --> J([STAGNATED])
+    H -- "🔄 refine" --> D
 
     style A fill:#ff2d95,stroke:#ff4fa8,color:#fff
     style B fill:#2a1420,stroke:#ff2d95,color:#ffa2cf
@@ -80,7 +73,6 @@ flowchart TD
     style H fill:#2a2000,stroke:#ffd83d,color:#fff59d
     style I fill:#0d2e1a,stroke:#4caf50,color:#7cf0a0
     style J fill:#2e1a0d,stroke:#ff9800,color:#ffb14a
-    style K fill:#2a1420,stroke:#ff2d95,color:#ffa2cf
 ```
 
 1. **Brief** → Describe your design goal in plain language (`/picasso --design-loop "hero for B2B SaaS"`)
@@ -124,6 +116,24 @@ flowchart TD
 
 ## 🔄 The loop — 7 steps per round
 
+```mermaid
+flowchart LR
+    S1[Request] --> S2[Extract] --> S3[Implement] --> S4[Render] --> S5[Score] --> S6[Gaps] --> S7{Gate}
+    S7 -- "✅ ≥9.0" --> AP([APPROVED])
+    S7 -- "📉 plateau" --> ST([STAGNATED])
+    S7 -- "🔄 retry" --> S1
+
+    style S1 fill:#0d1f2d,stroke:#5ce1ff,color:#8eecff
+    style S2 fill:#0d1f2d,stroke:#5ce1ff,color:#8eecff
+    style S3 fill:#1a1a2e,stroke:#7cf0a0,color:#7cf0a0
+    style S4 fill:#1a1a2e,stroke:#7cf0a0,color:#7cf0a0
+    style S5 fill:#2a2000,stroke:#ffd83d,color:#ffd83d
+    style S6 fill:#2a2000,stroke:#ffd83d,color:#ffd83d
+    style S7 fill:#2a1420,stroke:#ff2d95,color:#ffa2cf
+    style AP fill:#0d2e1a,stroke:#4caf50,color:#7cf0a0
+    style ST fill:#2e1a0d,stroke:#ff9800,color:#ffb14a
+```
+
 | Step | Name | What happens |
 |---|---|---|
 | `01` | 📡 **Request** | `browser_batch`: navigate → form_input → wait → screenshot(800px) → get_text |
@@ -134,21 +144,36 @@ flowchart TD
 | `06` | 📋 **Gaps** | 3 lines max · goal-declared format: `current → target` · 15 words each. |
 | `07` | 🚪 **Gate** | total ≥ gate → ✅ APPROVED · plateau → STAGNATED · else → next round |
 
-```
- ┌───────────────────┐    structured prompt    ┌──────────────────────┐
- │ /picasso          │ ──────────────────────► │ Claude Design        │
- │ (Claude Code)     │                          │ (claude.ai/design)   │
- │                   │ ◄────────────────────── │                      │
- └───────────────────┘    tokens + preview      └──────────────────────┘
-         │                                               ▲
-         │ implement · render · score (steps 03-05)      │
-         ▼                                               │
-  impl preview ──► ΔE / layout / motion ──► gap refine ─┘
-```
-
 ---
 
 ## 🏗️ Architecture — component map
+
+```mermaid
+flowchart LR
+    subgraph CC["Claude Code"]
+        PC[/picasso] --> PDL[pdl-conductor]
+        HK[6 hooks] --> PDL
+        PDL <--> DM[DESIGN.md]
+    end
+    subgraph MCP["MCP"]
+        CMCP[chrome-mcp]
+        WMCP[webdesign-mcp]
+    end
+    CD[Claude Design]
+
+    PDL --> CMCP <--> CD
+    PDL --> WMCP
+
+    style CC fill:#1b0d14,stroke:#ff2d95,color:#ffa2cf
+    style MCP fill:#0a1520,stroke:#5ce1ff,color:#8eecff
+    style PC fill:#2a1420,stroke:#ff2d95,color:#ffa2cf
+    style PDL fill:#ff2d95,stroke:#ff4fa8,color:#fff
+    style HK fill:#2a1420,stroke:#ff2d95,color:#ffa2cf
+    style DM fill:#0d1f2d,stroke:#5ce1ff,color:#8eecff
+    style CMCP fill:#0a1520,stroke:#5ce1ff,color:#8eecff
+    style WMCP fill:#0a1520,stroke:#5ce1ff,color:#8eecff
+    style CD fill:#0d2e1a,stroke:#7cf0a0,color:#7cf0a0
+```
 
 | Tag | Component | Role |
 |---|---|---|
@@ -162,6 +187,29 @@ flowchart TD
 ---
 
 ## 🎛️ Modes — 5 ways to use the bridge
+
+```mermaid
+flowchart LR
+    S([/picasso]) --> LOOP[--design-loop ⭐]
+    S --> SOLO[--design-solo]
+    S --> CRIT[--design-critique]
+    S --> REF[--design-reference]
+    S --> SRC["--from-site / --from-figma"]
+    LOOP --> AP{APPROVED?}
+    AP -- "polish" --> ITER[--design-iterate]
+    AP -- "ship" --> DONE([✅ Done])
+    ITER --> DONE
+
+    style S fill:#ff2d95,stroke:#ff4fa8,color:#fff
+    style LOOP fill:#0d1f2d,stroke:#5ce1ff,color:#8eecff
+    style SOLO fill:#1a1a2e,stroke:#7cf0a0,color:#7cf0a0
+    style CRIT fill:#1a1a2e,stroke:#7cf0a0,color:#7cf0a0
+    style REF fill:#1a1a2e,stroke:#7cf0a0,color:#7cf0a0
+    style SRC fill:#1a1a2e,stroke:#7cf0a0,color:#7cf0a0
+    style ITER fill:#2a2000,stroke:#ffd83d,color:#ffd83d
+    style AP fill:#2a1420,stroke:#ff2d95,color:#ffa2cf
+    style DONE fill:#0d2e1a,stroke:#4caf50,color:#7cf0a0
+```
 
 | Flag | Name | Description | Best for |
 |---|---|---|---|
@@ -216,6 +264,16 @@ flowchart TD
 
 ## 🏆 Gate scoring — mathematically verified fidelity
 
+```mermaid
+pie title Gate Score Weights (total = 10.0)
+    "🎨 Colors — ΔE CIE2000" : 25
+    "🔤 Typography" : 20
+    "📐 Layout & Spacing" : 20
+    "🧩 Components" : 15
+    "🎬 Motion" : 10
+    "📱 Responsive" : 10
+```
+
 | Criterion | Weight | How it's measured |
 |---|---|---|
 | 🎨 Colors | **25%** | ΔE CIE2000 palette comparison per design token |
@@ -232,6 +290,17 @@ flowchart TD
 ## 🧠 Context backpressure — graceful degradation, never silent failure
 
 > The loop degrades gracefully as context fills. It never crashes silently — it checkpoints and exits `PAUSED` so you can resume in a fresh session.
+
+```mermaid
+flowchart LR
+    N([✅ NORMAL]) -- ">60%" --> W([⚠️ WARN]) -- ">75%" --> D([🔶 DEGRADE]) -- ">85%" --> SW([🔴 SWITCH]) -- ">95%" --> P([💾 PAUSED])
+
+    style N fill:#0d2e1a,stroke:#4caf50,color:#7cf0a0
+    style W fill:#2a2000,stroke:#ffd83d,color:#ffd83d
+    style D fill:#2a1800,stroke:#ff9800,color:#ffb14a
+    style SW fill:#2e0d0d,stroke:#f44336,color:#ff8a80
+    style P fill:#1a1a2e,stroke:#7cf0a0,color:#7cf0a0
+```
 
 | Context used | State | What happens |
 |---|---|---|
@@ -278,6 +347,22 @@ flowchart TD
 ## 🪝 Lifecycle hooks — full control over every event
 
 > Six hooks. Drop them in `~/.claude/hooks/`. Edit a stub to activate. Delete to disable.
+
+```mermaid
+flowchart LR
+    AD([autodetect]) --> PRE[pre-round] --> LOOP((round)) --> POST[post-round]
+    LOOP -- plateau --> STAG[stagnation]
+    LOOP -- "✅" --> APP[approved]
+    LOOP -- "❌" --> FAIL[failed]
+
+    style AD fill:#2a1420,stroke:#ff2d95,color:#ffa2cf
+    style PRE fill:#0d1f2d,stroke:#5ce1ff,color:#8eecff
+    style LOOP fill:#ff2d95,stroke:#ff4fa8,color:#fff
+    style POST fill:#0d1f2d,stroke:#5ce1ff,color:#8eecff
+    style STAG fill:#2a2000,stroke:#ffd83d,color:#ffd83d
+    style APP fill:#0d2e1a,stroke:#4caf50,color:#7cf0a0
+    style FAIL fill:#2e0d0d,stroke:#f44336,color:#ff8a80
+```
 
 | Hook | Fires on | What it does |
 |---|---|---|
