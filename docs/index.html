@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Picasso Bridge Loop · v1.0 · Design. Implement. Converge.</title>
+<title>Picasso Bridge Loop · v1.1 · Design. Implement. Converge.</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Monoton&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -264,7 +264,7 @@ const STATS = [
   {v:"9.0",  l:"Default gate",          s:"Weighted fidelity, 6 criteria"},
   {v:"5",    l:"Modes",                 s:"loop · solo · critique · ref · iter"},
   {v:"7",    l:"Round steps",           s:"request → gate, every round"},
-  {v:"9+",   l:"Patterns",              s:"Token-aware by design"},
+  {v:"13+",  l:"Patterns",              s:"Token-aware + source-agnostic"},
 ];
 
 const QUICK = [
@@ -375,6 +375,10 @@ const PATTERNS = [
   {n:"07", h:"Zero-context subagent",   p:"Implementation gets a scoped ~200 tok brief, not the 2,000 tok parent context.",                    src:"pattern · agentic"},
   {n:"08", h:"Idempotency check",       p:"sha256 of target vs. pending write. Unchanged files never touched — clean diffs.",                   src:"pattern · core"},
   {n:"09", h:"Context backpressure",    p:"Five degradation levels. Checkpoint on PAUSED. Resumable in a new session.",                         src:"pattern · core"},
+  {n:"10", h:"Design source abstraction", p:"--from-site extracts DESIGN.md tokens from any live site. --from-figma uses Figma MCP instead of Claude Design. Same scoring, different source.", src:"pattern · input · v1.1"},
+  {n:"11", h:"Visual scoring tiers",   p:"Numeric gate scores map to labels: PASS ✓✓ / PASS ✓ / PASS WITH NOTES / ITERATE / FAIL. Tier thresholds relative to configured gate.", src:"pattern · UX · v1.1"},
+  {n:"12", h:"SITE.md cross-page contract", p:"Multi-page builds share a SITE.md: nav + footer copied once from first APPROVED page, never regenerated. Design tokens read from DESIGN.md across all pages.", src:"pattern · multi-page · v1.1"},
+  {n:"13", h:"Drawbridge annotation feedback", p:"Browser DOM annotations from Drawbridge are ingested as goal-declared gaps before each REQUEST step. Replaces vague text feedback with precise element-level targets.", src:"pattern · feedback · v1.1"},
 ];
 
 const HOOKS = [
@@ -387,6 +391,15 @@ const HOOKS = [
 ];
 
 const CHANGELOG = [
+  {v:"v1.1", tone:"green", t:"2026-04 · design sources + feedback + multi-page", items:[
+    "Adds: --from-site <url> — extract DESIGN.md tokens from any live site (design-md-chrome pattern)",
+    "Adds: --from-figma --figma <key> — Figma MCP as design source, replaces Claude Design browser calls",
+    "Adds: --feedback drawbridge — Drawbridge browser annotations ingested as goal-declared gaps",
+    "Adds: --multi-page + SITE.md — cross-page consistency contract (nav/footer copied once, never regenerated)",
+    "Adds: visual scoring tiers — PASS ✓✓ / PASS ✓ / PASS WITH NOTES / ITERATE / FAIL per round",
+    "Adds: expanded fallbacks — from-site/from-figma valid when Chrome MCP or Pro unavailable",
+    "Docs: companion-tools.md — integration guide for 6 external tools",
+  ]},
   {v:"v1.0", tone:"", t:"2026-04 · FIRST RELEASE · combined", items:[
     "Unified public repo: v0.1 narrative + v0.2 operator additions",
     "Adds: context backpressure · 10 token-optimizations · Karpathy principles · 5 modes + 4 scope presets",
@@ -445,7 +458,7 @@ function Neon(){
           <div className="orb alt"><i/></div>
         </div>
         <p className="neon-sub">Design&nbsp;&nbsp;·&nbsp;&nbsp;Implement&nbsp;&nbsp;·&nbsp;&nbsp;Converge</p>
-        <div className="neon-tag">v1.0 · first release · 5 modes · 9 patterns · MIT</div>
+        <div className="neon-tag">v1.1 · 5 modes · 13 patterns · MIT</div>
       </div>
     </div>
   );
@@ -457,8 +470,9 @@ function TOC(){
     ["#refs","05 deps"],["#arch","06 architecture"],["#flow","07 round flow"],
     ["#score","08 gate"],["#tokens","09 tokens"],["#backpressure","10 backpressure"],
     ["#modes","11 modes"],["#karpathy","12 karpathy"],["#patterns","13 patterns"],
-    ["#variants","14 variants"],["#hooks","15 hooks"],["#tree","16 repo"],
-    ["#install","17 install"],["#demo","18 demo"],["#changelog","19 changelog"],["#icons","20 icons"],
+    ["#variants","14 variants"],["#hooks","15 hooks"],["#companions","16 companion tools"],
+    ["#tree","17 repo"],["#install","18 install"],["#demo","19 demo"],
+    ["#changelog","20 changelog"],["#icons","21 icons"],
   ];
   return <div className="toc">{items.map(([h,l])=>(<a key={h} href={h}>{l}</a>))}</div>;
 }
@@ -988,10 +1002,69 @@ function SecHooks(){
   );
 }
 
+function SecCompanions(){
+  const tools = [
+    {layer:"Input", tag:"DESIGN SOURCE", color:"cyan",
+     name:"design-md-chrome",
+     repo:"bergside/design-md-chrome",
+     desc:"Chrome extension — scans any live site and exports its design system as DESIGN.md. Typography, color palette, spacing, shadows, WCAG contrast.",
+     when:"\"Build like site X\" — skips speculative Round-0, real tokens = 1–2 fewer rounds to gate.",
+     flag:"--from-site <url>"},
+    {layer:"Input", tag:"DESIGN SOURCE", color:"cyan",
+     name:"Figma MCP",
+     repo:"figma/mcp-server-guide",
+     desc:"Bidirectional Figma ↔ Claude Code via MCP. Read components, extract variables, modify designs programmatically. No Claude Design browser calls needed.",
+     when:"Figma file already exists as source of truth. Replaces browser capture entirely.",
+     flag:"--from-figma --figma <file-key>"},
+    {layer:"Feedback", tag:"ANNOTATION", color:"pink",
+     name:"Drawbridge",
+     repo:"breschio/drawbridge",
+     desc:"Chrome extension for browser annotations. Press C → click element → type comment. Exports DOM selectors + comments to moat-tasks.md.",
+     when:"Designer wants to annotate the running preview directly. Replaces vague text feedback with precise element-level targets.",
+     flag:"--feedback drawbridge"},
+    {layer:"Scale", tag:"SKILL ROUTING", color:"",
+     name:"LibreUIUX-Claude-Code",
+     repo:"HermeticOrmus/LibreUIUX-Claude-Code",
+     desc:"152 specialized UI/UX agents: ui-validator, responsive-checker, design-critic, a11y-enforcer. 70 domain plugins, 76 slash commands.",
+     when:"Complex multi-component builds where dominant gap maps to a specific agent (colors, responsive, accessibility, motion).",
+     flag:"parallel with pdl-conductor"},
+    {layer:"Scale", tag:"TOOLKIT", color:"",
+     name:"Frontend Design Toolkit",
+     repo:"wilwaldon/Claude-Code-Frontend-Design-Toolkit",
+     desc:"Curated stack: Figma MCP, design tokens, Tailwind, motion libraries, Playwright MCP, accessibility skills. Install as Context7 MCP source.",
+     when:"Full project setup. Adds design vocabulary to the Claude Code session context.",
+     flag:"claude mcp add context7"},
+    {layer:"Visual QA", tag:"TESTING", color:"",
+     name:"claude-code-frontend-dev",
+     repo:"hemangjoshi37a/claude-code-frontend-dev",
+     desc:"Closed-loop visual testing with Playwright. Claude 4.5 sees your UI through screenshots. Automated 5-iteration fix loop with scoring tiers.",
+     when:"Post-APPROVED deep verification. Catches sub-pixel issues that ΔE comparison misses.",
+     flag:"after PDL APPROVED"},
+  ];
+  return (
+    <div className="section" id="companions">
+      <div className="kicker">16 · Companion tools</div>
+      <h2 className="sec cyan">Six tools that extend the pipeline.</h2>
+      <p>Picasso is a focused loop orchestrator. These tools extend it at the <strong>input</strong>, <strong>feedback</strong>, and <strong>scale</strong> layers without coupling the core loop to third-party dependencies. All are optional. Full integration guide: <a href="companion-tools.md">docs/companion-tools.md</a>.</p>
+      <div className="grid c2" style={{marginTop:20}}>
+        {tools.map(t=>(
+          <div className={"card" + (t.color ? " "+t.color : "")} key={t.repo}>
+            <div className="tag">{t.layer} · {t.tag}</div>
+            <h4>{t.name}</h4>
+            <p style={{marginBottom:8}}>{t.desc}</p>
+            <p style={{color:"var(--ink-dim)",fontSize:13}}><strong style={{color:"var(--ink-mid)"}}>When:</strong> {t.when}</p>
+            <div className="meta">{t.repo} · <span style={{color:"var(--yellow)"}}>{t.flag}</span></div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function SecTree(){
   return (
     <div className="section" id="tree">
-      <div className="kicker">16 · Repository layout</div>
+      <div className="kicker">17 · Repository layout</div>
       <h2 className="sec yellow">Every file, its job.</h2>
       <p>Shallow and typed. If something looks like a framework, it is not one.</p>
       <div className="tree">
@@ -1043,7 +1116,7 @@ function SecTree(){
 function SecInstall(){
   return (
     <div className="section" id="install">
-      <div className="kicker">17 · Install</div>
+      <div className="kicker">18 · Install</div>
       <h2 className="sec yellow">One line. Wizard optional.</h2>
       <p>The oneliner writes the command, the subagent, and the hooks into your Claude Code user directory, patches <code className="inl">settings.json</code> (with a timestamped backup), and runs a smoke verify.</p>
       <Code title="oneliner · posix">
@@ -1071,7 +1144,7 @@ function SecInstall(){
 function SecDemo(){
   return (
     <div className="section" id="demo">
-      <div className="kicker">18 · End-to-end run</div>
+      <div className="kicker">19 · End-to-end run</div>
       <h2 className="sec cyan">What a session looks like.</h2>
       <p>An illustrative trace. Exact numbers vary by task, scope, and gate — the shape is stable.</p>
       <div className="term-demo">
@@ -1121,7 +1194,7 @@ function SecDemo(){
 function SecChangelog(){
   return (
     <div className="section" id="changelog">
-      <div className="kicker">19 · Changelog</div>
+      <div className="kicker">20 · Changelog</div>
       <h2 className="sec yellow">From v0.1 seed to v1.0 first release.</h2>
       <p>What the bridge looked like at each step, and what landed here at v1.0 — now a single combined package covering the full control plane.</p>
       <div className="chl">
@@ -1142,7 +1215,7 @@ function SecChangelog(){
 function SecIcons(){
   return (
     <div className="section" id="icons">
-      <div className="kicker">20 · Icon set</div>
+      <div className="kicker">21 · Icon set</div>
       <h2 className="sec">Sixteen marks, one visual register.</h2>
       <p>Used throughout docs pages and the README. Line art, glowing in pink / yellow / cyan — no fills, no decoration.</p>
       <div className="icon-grid">
@@ -1176,13 +1249,14 @@ function App(){
         <SecPatterns/>
         <SecVariants/>
         <SecHooks/>
+        <SecCompanions/>
         <SecTree/>
         <SecInstall/>
         <SecDemo/>
         <SecChangelog/>
         <SecIcons/>
         <div className="foot">
-          glowing since 2026 · <span>picasso-bridge</span> v1.0 · MIT · an independent orchestrator
+          glowing since 2026 · <span>picasso-bridge</span> v1.1 · MIT · an independent orchestrator
         </div>
       </div>
     </>

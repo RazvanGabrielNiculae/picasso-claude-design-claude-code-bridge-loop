@@ -33,6 +33,20 @@ PICASSO = standalone orchestrator pentru **frontend premium, UX/UI, CRO, 3D, ani
 /picasso --design-reference <url>     # Reverse-engineering tokens dintr-un site real
 /picasso --design-iterate <task>      # Polish post-APPROVED (single refine pass)
 /picasso --scope simple|medium|complex|mega <task>  # Preset auto pt gate + rounds
+
+# ── Design source flags (new in v0.2) ────────────────────────────────────────
+/picasso --from-site <url> <task>     # Extrage DESIGN.md din orice site live → seed PDL
+                                       # Ex: /picasso --from-site stripe.com "pricing page"
+/picasso --from-figma --figma <key> <task>  # Figma MCP ca sursă de design (în loc de Claude Design)
+                                       # Ex: /picasso --from-figma --figma ABC123 "hero"
+
+# ── Feedback flags (new in v0.2) ──────────────────────────────────────────────
+/picasso --design-loop --feedback drawbridge <task>  # Include adnotări Drawbridge în loop
+                                       # Citește moat-tasks.md → gaps pre-populați per round
+
+# ── Multi-page flag (new in v0.2) ────────────────────────────────────────────
+/picasso --design-loop --multi-page <task>  # SITE.md cross-page consistency
+                                       # Ex: /picasso --design-loop --multi-page "5-page site"
 /picasso --fast <task>                # Max viteză: prompts comprimate, fast scoring, 3r max, 800px
 /picasso --budget <cents> <task>      # Limitează costul estimat total (ex: --budget 30)
 /picasso --budget <tier>          # standard | premium | elite (default: premium)

@@ -1,37 +1,63 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
-Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+All notable changes to the Picasso bridge loop are documented here.
+Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [Unreleased]
+---
 
-### Added
-- Model routing table in `pdl-conductor`: fast model for scoring, standard for synthesis, large for stagnation recovery.
-- Context backpressure thresholds (4 levels: WARN/DEGRADE/SWITCH_MODEL/PAUSED) via `lib/context-guard.sh`.
-- Budget preflight check via `lib/budget-preflight.sh` + `--budget <cents>` flag on `/picasso`.
-- `~/.claude/pdl/budget.json` for configurable daily cap.
-- Fingerprint deduplication per round (`.pdl/fingerprints.txt`) — early exit on identical Claude Design output.
-- Idempotency check before every implementation file write.
-- Zero-context subagent dispatch pattern for PHASE 3 delegation.
-- `PAUSED` exit code + checkpoint at `.pdl/checkpoint.json` for resumable sessions.
-- `BUDGET_CAP_HIT` exit code.
-- `docs/DESIGN-PATTERNS.md` — 9 orchestration patterns documented with interaction diagram.
-- Token-optimization doc extended with model routing, backpressure, budget preflight, and fingerprint sections.
-
-## [0.1.0] — 2026-04-20
+## [Unreleased] — v0.2.0
 
 ### Added
-- `/picasso` slash command — creative front-end orchestrator.
-- `/picasso --design-loop` flag — bidirectional Claude Code ↔ Claude Design loop.
-- Four additional modes: `--design-solo`, `--design-critique`, `--design-reference <url>`, `--design-iterate`.
-- Scope presets: `--scope simple|medium|complex|mega` (sets gate + rounds + fallback-manual).
-- `pdl-conductor` agent — manages rounds, scoring, gate enforcement, mode branching.
-- `pdl-autodetect` hook — detects Claude Design handoff patterns in prompts.
-- Lifecycle hook stubs: `pdl-pre-round`, `pdl-post-round`, `pdl-stagnation`, `pdl-approved`, `pdl-failed`.
-- One-liner installer hosted via jsDelivr: `curl … | bash` (with optional `--wizard`).
-- Interactive install wizard (`install.sh --wizard`).
-- Auto-patching of `~/.claude/settings.json` (timestamped backup kept).
-- Installers for bash and PowerShell.
-- Verification script with offline `--smoke` mode.
-- Uninstaller that cleanly unregisters `_pdl_managed` hook entries.
-- Documentation set (architecture, installation, bridge loop, modes, hooks, gate scoring, prompt templates, troubleshooting).
+
+#### Design source flags (`--from-site`, `--from-figma`)
+- `--from-site <url>` — extract DESIGN.md tokens from any live site using the
+  [bergside/design-md-chrome](https://github.com/bergside/design-md-chrome) pattern
+  via `webdesign-mcp scrape_reference`. Seeds round-0 with real production tokens
+  instead of inferred ones. Typically reduces rounds-to-gate by 1-2.
+- `--from-figma --figma <file-key>` — use Figma MCP as design source instead of
+  Claude Design. Requires `claude plugin install figma@claude-plugins-official`.
+
+#### Feedback integration (`--feedback drawbridge`)
+- `--design-loop --feedback drawbridge` — reads `moat-tasks.md` from
+  [breschio/drawbridge](https://github.com/breschio/drawbridge) browser annotations
+  before each REQUEST step. DOM-anchored annotations merged into round gaps.
+  Marked "doing" on ingest, "done" on APPROVED.
+
+#### Multi-page consistency (`--multi-page`, SITE.md)
+- `--design-loop --multi-page` — enable SITE.md cross-page contract
+  (pattern from [jezweb/claude-skills/design-loop](https://github.com/jezweb/claude-skills)).
+  Navigation and footer copied from first APPROVED page, never regenerated.
+
+#### Visual scoring tiers
+- Numeric scores now map to tier labels: PASS checkcheck / PASS check / PASS WITH NOTES / ITERATE / FAIL.
+  Adopted from hemangjoshi37a/claude-code-frontend-dev scoring system.
+
+#### Expanded fallbacks
+- from-site and from-figma are now fallbacks when Chrome MCP or Pro access unavailable.
+
+#### Companion tools documentation
+- Added `docs/companion-tools.md`: design-md-chrome, Figma MCP, Drawbridge,
+  LibreUIUX-Claude-Code, Frontend Design Toolkit, claude-code-frontend-dev.
+
+### Changed
+- `agents/pdl-conductor.md` — extended input schema, added PHASE 1.5, 2.1, 3.0.5,
+  visual tier labels in PHASE 3.5, expanded fallback matrix.
+- `commands/picasso.md` — 4 new flags in usage block.
+
+---
+
+## [0.1.0] — 2026-04-01
+
+### Added
+- Initial release: bidirectional Claude Code <-> Claude Design bridge loop.
+- 7-step round protocol (request -> extract -> implement -> render -> score -> gaps -> gate).
+- Gate scoring: 6 criteria, weighted 0-10, default gate 9.0.
+- 5 modes: loop, solo, critique, reference, iterate.
+- 4 Karpathy principles baked into conductor.
+- 9 orchestration patterns (token cache, fingerprint dedup, idempotency, backpressure,
+  zero-context subagents, stagnation detection, early abort, checkpoint/resume, lazy reads).
+- 6 lifecycle hooks: pre-round, post-round, stagnation, approved, failed.
+- Scope presets: simple / medium / complex / mega.
+- One-liner install + SHA256 integrity check.
+- scripts/verify.sh --smoke prerequisite checker.
+- CONTRIBUTING.md + pre-commit-safety.sh scanner.

@@ -54,6 +54,20 @@ picasso-bridge verify --smoke
 
 ---
 
+## 🔁 How it works
+
+1. **Brief** → Describe your design goal in plain language (`/picasso --design-loop "hero for B2B SaaS"`)
+2. **ASSUMPTIONS** → Picasso surfaces inferred tokens as an explicit block before any browser call — you correct inline
+3. **DESIGN.md** → Structured 9-section spec is generated: colors · typography · layout · motion · responsive · accessibility
+4. **Claude Design** → Picasso sends a structured prompt, captures the visual proposal via screenshot
+5. **Implement** → Zero-context subagent applies only the changed `DESIGN.md` sections (~200 tok vs 2,000 naive)
+6. **Render** → Desktop always · mobile only if previous responsive score < 8.0
+7. **Score** → Weighted gate: ΔE colors (25%) · typography (20%) · layout (20%) · components (15%) · motion (10%) · responsive (10%)
+8. **Gaps** → 3 lines max · goal-declared format: `current → target` · passed to next round
+9. **Gate** → `score ≥ 9.0` → ✅ **APPROVED** · plateau → STAGNATED · else → refine and repeat from step 4
+
+---
+
 ## 📊 By the numbers
 
 | Metric | Value | What it means |
@@ -129,6 +143,29 @@ picasso-bridge verify --smoke
 | `--design-critique <path>` | 🔬 Critique | Claude Design audits your existing implementation and scores it. | Design-debt audit on existing code |
 | `--design-reference <url>` | 🌐 Reference | Reverse-engineer design tokens from any live site. Seeds `DESIGN.md`. | "Make it feel like linear.app" |
 | `--design-iterate` | ✨ Iterate | Polish pass after APPROVED. Gate auto-set to prior score + 0.3. | Motion + micro-interaction polish |
+
+### 🆕 Design source flags (v0.2)
+
+| Flag | Description | When to use |
+|---|---|---|
+| `--from-site <url>` | Extract `DESIGN.md` tokens from any live site → seed round-0 | "Build something with stripe.com's design system" |
+| `--from-figma --figma <key>` | Use Figma MCP as design source instead of Claude Design | You have Figma designs ready |
+| `--feedback drawbridge` | Import Drawbridge browser annotations as pre-populated gaps | Designer annotated the preview |
+| `--multi-page` | Enable `SITE.md` cross-page consistency contract | Multi-page sites |
+
+```bash
+# Seed from live site (no Claude Design Pro needed for the design foundation)
+/picasso --from-site https://stripe.com "pricing page for fintech"
+
+# Use Figma as source
+/picasso --from-figma --figma ABC123xyz "implement hero from Figma"
+
+# Include designer browser annotations in the loop
+/picasso --design-loop --feedback drawbridge "hero for B2B SaaS"
+
+# Multi-page site with cross-page consistency
+/picasso --design-loop --multi-page --scope mega "5-page marketing site"
+```
 
 ### 📏 Scope presets — complexity-based auto-routing
 
@@ -297,9 +334,34 @@ The installer patches `~/.claude/settings.json` automatically (timestamped backu
 
 ---
 
+## 🔌 Companion tools
+
+Picasso handles the loop. These tools extend it at the **input**, **feedback**, and **scale** layers.
+
+| Tool | Layer | What it adds |
+|---|---|---|
+| [bergside/design-md-chrome](https://github.com/bergside/design-md-chrome) ⭐542 | Input | Extract `DESIGN.md` from any live site → `--from-site` |
+| [Figma MCP](https://github.com/figma/mcp-server-guide) | Input | Figma designs as design source → `--from-figma` |
+| [breschio/drawbridge](https://github.com/breschio/drawbridge) | Feedback | Browser annotations → DOM-anchored gaps → `--feedback drawbridge` |
+| [HermeticOrmus/LibreUIUX-Claude-Code](https://github.com/HermeticOrmus/LibreUIUX-Claude-Code) | Scale | 152 UI/UX agents for complex builds |
+| [wilwaldon/Frontend-Design-Toolkit](https://github.com/wilwaldon/Claude-Code-Frontend-Design-Toolkit) | Scale | Curated toolkit: tokens, Playwright, accessibility |
+| [hemangjoshi37a/claude-code-frontend-dev](https://github.com/hemangjoshi37a/claude-code-frontend-dev) | Visual QA | Post-APPROVED visual testing with closed-loop fixes |
+
+See **[docs/companion-tools.md](docs/companion-tools.md)** for integration guides.
+
+---
+
 ## 📋 Changelog
 
-### v1.0 — 2026-04 · First public release
+### v0.2.0 — 2026-04 · Design sources + feedback
+- Adds: `--from-site` (design-md-chrome pattern), `--from-figma` (Figma MCP source)
+- Adds: `--feedback drawbridge` (browser annotation integration)
+- Adds: `--multi-page` + `SITE.md` cross-page consistency (jezweb/design-loop pattern)
+- Adds: visual scoring tiers (PASS / PASS WITH NOTES / ITERATE / FAIL)
+- Adds: expanded fallback matrix for all new input modes
+- Docs: `docs/companion-tools.md` integration guide
+
+### v0.1.0 — 2026-04 · First public release
 - Unified public repo: v0.1 narrative + v0.2 operator additions
 - Adds: context backpressure · 10 token-optimizations · Karpathy principles · 5 modes + 4 scope presets
 - Adds: model routing · zero-context subagent · trajectory abort · idempotent writes

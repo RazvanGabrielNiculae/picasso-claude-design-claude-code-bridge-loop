@@ -27,6 +27,18 @@ reference_url: ""     # required when mode=reference
 fallback_manual: false
 project_dir: "."
 fast: false           # true = Tier-2 compression, haiku for all scoring steps
+
+# ── Design source (new) ──────────────────────────────────────────────────────
+from_site: ""         # Extract DESIGN.md tokens from any live site (design-md-chrome pattern)
+                      # Usage: /picasso --from-site https://linear.app "hero..."
+from_figma: false     # Use Figma MCP (mcp__Figma__*) as design source instead of Claude Design
+figma_file_key: ""    # Required when from_figma=true — Figma file key from URL
+# ── Multi-page (new) ─────────────────────────────────────────────────────────
+multi_page: false     # Enable SITE.md cross-page consistency (jezweb/design-loop pattern)
+site_md_path: "SITE.md" # Site-level vision + cross-page contract
+# ── Feedback (new) ───────────────────────────────────────────────────────────
+drawbridge_tasks: ""  # Path to moat-tasks.md from Drawbridge browser annotations
+                      # Usage: /picasso --design-loop --feedback drawbridge "task"
 ```
 
 ## Modes
@@ -38,6 +50,58 @@ fast: false           # true = Tier-2 compression, haiku for all scoring steps
 | `critique` | N/A | CRITIQUE.md, no code changes |
 | `reference` | N/A | Seeded DESIGN.md + tokens.json |
 | `iterate` | 1 polish pass | Incremental patch at gate+0.3 |
+
+---
+
+## PHASE 1.5: DESIGN SOURCE SELECTION (new — runs before PHASE 2 when applicable)
+
+### Mode A — `from_site` (design-md-chrome pattern)
+
+When `from_site` is set, extract design tokens from the reference site **before** generating
+the Round-0 Claude Design prompt. This seeds DESIGN.md with real production tokens.
+
+```
+1. scrape_reference(from_site) → raw_tokens.json
+2. Map raw_tokens → DESIGN.md 9-section format:
+     colors:     dominant palette + semantic tokens (ΔE-clustered)
+     typography: font-family stack, scale, weights, line-heights
+     spacing:    detected 8pt/4pt grid rhythm
+     components: identified UI patterns (nav, cta, card, form)
+     motion:     detected transition durations + easing curves
+     depth:      box-shadow values + glassmorphism params
+     brand:      inferred voice from copy + visual style label
+     responsive: detected breakpoints
+     accessibility: contrast ratios present in palette
+3. Save → <project_dir>/DESIGN.md  (replaces the spec-from-scratch in PHASE 2)
+4. Log: "DESIGN.md seeded from <from_site> — N tokens extracted"
+```
+
+DESIGN.md seeded from a live site = Round-0 starts with real constraints instead of
+inferred ones. Typically reduces rounds-to-gate by 1–2 rounds.
+
+Reference: [bergside/design-md-chrome](https://github.com/bergside/design-md-chrome) (MIT, 542★)
+
+### Mode B — `from_figma` (Figma MCP)
+
+When `from_figma: true`, use Figma MCP instead of Claude Design as the design source.
+
+```
+PHASE 1 prerequisite addition:
+  5. Figma MCP reachable?  → mcp__Figma__get_metadata(figma_file_key)
+  6. File accessible?      → check permissions
+
+PHASE 2 replacement (skip Claude Design browser calls):
+  mcp__Figma__get_design_context(figma_file_key) → design_context
+  mcp__Figma__get_variable_defs(figma_file_key)  → variables (tokens)
+  Map to DESIGN.md 9 sections
+  Round-N IMPLEMENT: use Figma components as ground truth
+
+PHASE 3 REQUEST replacement:
+  Instead of browser_batch(claude.ai/design):
+    mcp__Figma__get_screenshot(node_id) → design-output.png
+    mcp__Figma__get_design_context()    → design-html.txt equiv
+  All scoring steps proceed identically.
+```
 
 ---
 
@@ -68,6 +132,49 @@ Before any action, apply these in order:
    Code outside the changed DESIGN.md sections is untouched.
 4. **Goal-declared gaps.** Gaps are not imperative commands. They are measurable target states:
    `[criterion]: [current state] → [target state]`. The implementer iterates toward the goal.
+
+---
+
+## PHASE 2.1: SITE CONTEXT (runs before PHASE 2 when `multi_page: true`)
+
+Multi-page builds require a site-level contract to maintain cross-page consistency.
+This pattern prevents the most common failure mode in multi-page loops: pages that
+are visually inconsistent with each other.
+
+```
+READ (or CREATE) SITE.md at <project_dir>/SITE.md
+
+SITE.md structure:
+─────────────────────────────────────────────────────────────
+# SITE.md — [Project Name]
+
+## Vision
+[1-2 sentences: what the site communicates, who it's for]
+
+## Pages
+- [ ] home       → <project_dir>/src/pages/index
+- [ ] pricing    → <project_dir>/src/pages/pricing
+- [ ] about      → <project_dir>/src/pages/about
+
+## Cross-page rules (non-negotiable)
+- Navigation: sticky, blur-backdrop, same component across all pages
+- Footer: identical across all pages — copy once, never regenerate
+- Color tokens: read from DESIGN.md §Colors — never hardcode per-page
+- Typography: read from DESIGN.md §Typography — scale is site-wide
+- Motion: page-transitions use the same duration/easing everywhere
+
+## Completed pages
+(updated after each page APPROVED)
+─────────────────────────────────────────────────────────────
+
+RULES when SITE.md exists:
+  1. Navigation + Footer: copy from first APPROVED page. Never regenerate.
+  2. Design tokens: read from DESIGN.md — do not re-derive per page.
+  3. After each page APPROVED: update SITE.md §Completed pages.
+  4. Each page round-0 prompt appends: "Consistent with SITE.md §Cross-page rules."
+```
+
+Reference: [jezweb/claude-skills/design-loop](https://github.com/jezweb/claude-skills) (baton-passing pattern)
 
 ---
 
@@ -157,6 +264,30 @@ If the brief is unambiguous (all tokens present), skip the assumption block enti
 | score.json write | ~20 tok | ~20 tok |
 | **Total Claude Code overhead** | **~400 tok** | **~230 tok** |
 
+### 3.0.5 DRAWBRIDGE PRE-ROUND (when `drawbridge_tasks` is set)
+
+Before the REQUEST step, check for pending Drawbridge annotations from the previous
+implementation preview. Drawbridge lets designers annotate directly on the running
+browser preview — annotations are exported as `moat-tasks.md`.
+
+```
+IF drawbridge_tasks != "" AND file_exists(drawbridge_tasks):
+  READ moat-tasks.md
+  PARSE pending annotations (status: "to do"):
+    - Extract: element_selector, comment, screenshot_ref
+    - Map to gap format: "[selector]: [current state from annotation] → [desired state]"
+  MERGE into round-N gaps (max 3 total, Drawbridge gaps take priority)
+  LOG: "Drawbridge: N annotations ingested"
+  UPDATE moat-tasks.md — mark ingested items status: "doing"
+
+After APPROVED:
+  UPDATE moat-tasks.md — mark all items status: "done"
+```
+
+Reference: [breschio/drawbridge](https://github.com/breschio/drawbridge) (browser annotation → Claude Code)
+
+---
+
 ### 3.1 REQUEST (batched browser call)
 
 ```
@@ -231,6 +362,25 @@ Score output — single compact JSON, no prose:
   {"r":3,"scores":{"col":9.2,"typ":8.8,"lay":9.1,"comp":8.5,"mot":8.0,"res":9.0},"total":8.9,"delta":+0.4}
   save → .pdl/round-N/score.json (one line)
 ```
+
+### Visual scoring tiers (human-readable gate labels)
+
+Map numeric total to a tier label. Emit after each round's score line.
+
+```
+TIER MAP (against configured gate, default 9.0):
+  total >= 9.5            → PASS ✓✓   — exceptional fidelity, stop immediately
+  gate <= total < 9.5     → PASS ✓    — gate met, APPROVED
+  (gate - 0.5) <= total   → PASS WITH NOTES — within reach, continue if rounds remain
+  6.5 <= total < (gate-0.5) → ITERATE — significant gaps, refinement required
+  total < 6.5             → FAIL      — trajectory check: early abort if rounds ≤ 2 left
+
+Emit format (one line, after score.json):
+  ROUND 3 — PASS WITH NOTES (8.6 / 9.0) Δ+0.4 — gaps: motion, components
+  ROUND 4 — PASS ✓ (9.1 / 9.0) Δ+0.5 — APPROVED
+```
+
+Reference: hemangjoshi37a/claude-code-frontend-dev scoring system (MIT)
 
 ### 3.6 GAPS (max 3, ≤15 words each)
 
@@ -504,12 +654,18 @@ and git diff noise.
 ## Fallbacks
 
 ```
-CHROME MCP MISSING → "Install from https://claude.ai/chrome" → BLOCKED
-NON-PRO ACCOUNT   → "Claude Design requires Pro/Max/Team/Enterprise" → BLOCKED
-RATE LIMIT        → wait 60s, retry × 3 → rate_limit_hit → BLOCKED
-WEBDESIGN-MCP DOWN → skip render/score step, ask user to verify score manually
-BUDGET_CAP_HIT    → log to ~/.claude/pdl/economy.jsonl → exit BLOCKED
-PAUSED (checkpoint) → resume: read .pdl/checkpoint.json → restart from round N+1
+CHROME MCP MISSING    → "Install from https://claude.ai/chrome" → BLOCKED
+                        Fallback: use --from-site or --from-figma to skip browser requirement
+NON-PRO ACCOUNT       → "Claude Design requires Pro/Max/Team/Enterprise" → BLOCKED
+                        Fallback: --from-site <url> (no Claude Design needed)
+RATE LIMIT            → wait 60s, retry × 3 → rate_limit_hit → BLOCKED
+WEBDESIGN-MCP DOWN    → skip render/score step, ask user to verify score manually
+BUDGET_CAP_HIT        → log to ~/.claude/pdl/economy.jsonl → exit BLOCKED
+PAUSED (checkpoint)   → resume: read .pdl/checkpoint.json → restart from round N+1
+FIGMA MCP UNREACHABLE → fallback to --from-site with Figma preview URL
+FROM_SITE SCRAPE FAIL → fallback to manual DESIGN.md template (PHASE 2 as normal)
+DRAWBRIDGE NOT FOUND  → skip drawbridge pre-round, proceed without annotations
+SITE.md MISSING       → create minimal SITE.md template, then continue
 ```
 
 ---
