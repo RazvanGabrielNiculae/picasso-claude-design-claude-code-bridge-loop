@@ -182,6 +182,7 @@ picasso-bridge verify --smoke
 ## 🧬 Four Karpathy principles — baked into every round
 
 > Not guidelines. Mechanisms. Every one maps to a concrete component in the conductor.
+> Inspired by [Andrej Karpathy](https://github.com/karpathy)'s public notes on LLM coding pitfalls — specifically his observations on silent assumptions, minimal code, surgical edits, and goal-declared targets.
 
 | # | Principle | What the loop does |
 |---|---|---|
