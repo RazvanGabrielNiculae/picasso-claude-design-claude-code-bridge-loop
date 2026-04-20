@@ -1,5 +1,11 @@
 <div align="center">
 
+# 🎨 Picasso Orchestrator: Claude Design 🔄 Claude Code [Bridge Loop]
+
+### The first gate-scored bidirectional loop between Claude Code and Claude Design.<br/>Brief → Design → Implement → Score → Refine. Ships production-quality UI in minutes, not days.
+
+<br/>
+
 <img src="docs/banner.svg" alt="Picasso · Claude Design ↔ Claude Code Bridge Loop" width="100%"/>
 
 <br/><br/>
