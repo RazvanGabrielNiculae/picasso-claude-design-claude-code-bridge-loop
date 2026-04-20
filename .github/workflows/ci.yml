@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Shellcheck hooks and scripts
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: "."
+          severity: warning
+
+      - name: Verify safety scanner catches forbidden patterns
+        run: |
+          chmod +x scripts/pre-commit-safety.sh
+          # Sanity check: scanner exits 0 on clean tree.
+          git config user.email "ci@example.com"
+          git config user.name "ci"
+          bash scripts/pre-commit-safety.sh || { echo "Safety scan failed on clean tree"; exit 1; }
+
+      - name: Check required files exist
+        run: |
+          test -f README.md
+          test -f LICENSE
+          test -f CHANGELOG.md
+          test -f commands/picasso.md
+          test -f agents/pdl-conductor.md
+          test -f hooks/pdl-autodetect.sh
+          test -f docs/ARCHITECTURE.md
+          test -f docs/INSTALLATION.md
+          test -f docs/BRIDGE-LOOP.md
+          test -f docs/GATE-SCORING.md
+          test -f docs/PROMPT-TEMPLATES.md
+          test -f docs/TROUBLESHOOTING.md

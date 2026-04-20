@@ -1,0 +1,43 @@
+# Runtime artifacts
+.pdl/
+*.log
+node_modules/
+dist/
+build/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*~
+
+# Environment & secrets — hard deny
+.env
+.env.*
+.envrc
+*.pem
+*.key
+*.p12
+*.pfx
+**/secrets/
+**/credentials/
+**/*secret*
+**/*credential*
+**/*token*
+
+# Settings files (may contain hooks/paths to private setups)
+settings.json
+settings.local.json
+claude.config.json
+
+# Personal / private files
+CLAUDE.md
+AGENT_RULES.md
+AGENT_LEARNINGS.md
+MEMORY.md
+.claude/

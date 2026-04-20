@@ -1,0 +1,1195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Picasso Bridge Loop · v1.0 · Design. Implement. Converge.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Monoton&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+  :root{
+    --pink:#ff2d95; --pink-glow:#ff4fa8; --pink-soft:#ffa2cf;
+    --yellow:#ffd83d; --yellow-glow:#fff07a;
+    --cyan:#5ce1ff; --cyan-glow:#8eecff;
+    --green:#7cf0a0; --amber:#ffb14a;
+    --brick-dark:#1b0d14; --brick-mid:#2a1420; --mortar:#0c0509;
+    --ink:#f8eef2; --ink-dim:#b9a3ad; --ink-mid:#cdb7c0;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--brick-dark);color:var(--ink);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}
+  body{background:radial-gradient(1200px 700px at 20% -10%, rgba(255,45,149,.18), transparent 60%),radial-gradient(1000px 600px at 85% 5%, rgba(92,225,255,.12), transparent 65%),var(--brick-dark);min-height:100vh}
+  a{color:var(--cyan);text-decoration:none;border-bottom:1px dotted rgba(92,225,255,.35)}
+  a:hover{color:var(--cyan-glow);border-bottom-color:var(--cyan)}
+
+  .brick-wall{position:fixed;inset:0;z-index:-1;background-color:var(--brick-mid);
+    background-image:linear-gradient(var(--mortar) 2px, transparent 2px),linear-gradient(90deg, var(--mortar) 2px, transparent 2px),repeating-linear-gradient(90deg, rgba(0,0,0,0) 0 60px, rgba(0,0,0,.15) 60px 62px),repeating-linear-gradient(180deg, transparent 0 42px, rgba(255,255,255,.02) 42px 44px);
+    background-size:62px 44px, 62px 44px, 124px 44px, 100% 88px;opacity:.8}
+  .brick-wall::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 30% 12%, rgba(255,45,149,.28), transparent 55%),radial-gradient(ellipse at 75% 40%, rgba(92,225,255,.18), transparent 55%),radial-gradient(ellipse at 50% 80%, rgba(255,216,61,.10), transparent 60%);mix-blend-mode:screen;pointer-events:none}
+  .brick-wall::before{content:"";position:absolute;inset:0;background-image:linear-gradient(90deg, var(--mortar) 2px, transparent 2px);background-size:62px 44px;background-position:31px 44px;opacity:.55;mix-blend-mode:multiply}
+
+  /* NEON SIGN */
+  .sign-wrap{position:relative;margin:80px auto 0;max-width:1180px;padding:48px 40px 56px}
+  .sign{position:relative;border-radius:40px;padding:68px 56px 72px;
+    background:radial-gradient(ellipse at 50% 50%, rgba(255,45,149,.22), rgba(255,45,149,.06) 55%, transparent 78%),linear-gradient(180deg, rgba(40,10,24,.35), rgba(20,5,12,.55));
+    border:3px solid var(--pink);
+    box-shadow:0 0 0 6px rgba(255,45,149,.12), 0 0 50px rgba(255,45,149,.55), 0 0 110px rgba(255,45,149,.35), inset 0 0 80px rgba(255,45,149,.18)}
+  .sign::before{content:"";position:absolute;inset:16px;border-radius:28px;border:2px solid var(--pink-glow);box-shadow:0 0 12px var(--pink), 0 0 28px rgba(255,45,149,.6), inset 0 0 22px rgba(255,79,168,.35);pointer-events:none}
+  .bracket{position:absolute;width:32px;height:46px;background:linear-gradient(180deg,#111 0%, #2a2a2a 50%, #0a0a0a 100%);border-radius:6px;box-shadow:inset 0 2px 0 rgba(255,255,255,.08), 0 2px 8px rgba(0,0,0,.7);z-index:3}
+  .bracket::after{content:"";position:absolute;left:50%;top:-24px;transform:translateX(-50%);width:4px;height:32px;background:#050505;border-radius:2px}
+  .bracket.tl{top:-10px;left:130px}.bracket.tm{top:-10px;left:50%;transform:translateX(-50%)}.bracket.tr{top:-10px;right:130px}
+  .bracket.bl{bottom:-10px;left:130px}.bracket.bm{bottom:-10px;left:50%;transform:translateX(-50%)}.bracket.br{bottom:-10px;right:130px}
+  .cable{position:absolute;width:3px;background:#040404;z-index:2;border-radius:2px}
+  .cable.c1{top:-70px;left:146px;height:70px;transform:rotate(-6deg)}
+  .cable.c2{top:-90px;left:50%;height:90px}
+  .cable.c3{top:-70px;right:146px;height:70px;transform:rotate(6deg)}
+
+  .neon-title{font-family:'Monoton',cursive;font-weight:400;font-size:clamp(60px, 10vw, 140px);letter-spacing:.02em;line-height:1;margin:0;color:var(--yellow);
+    text-shadow:0 0 4px #fff6b3, 0 0 10px var(--yellow), 0 0 22px var(--yellow-glow), 0 0 48px rgba(255,216,61,.8), 0 0 90px rgba(255,120,0,.55);
+    display:flex;align-items:center;justify-content:center;gap:.14em;flex-wrap:wrap}
+  .neon-title .bridge{color:var(--cyan);text-shadow:0 0 4px #e6f9ff, 0 0 10px var(--cyan), 0 0 26px var(--cyan-glow), 0 0 52px rgba(92,225,255,.75)}
+  .neon-orbs{display:flex;justify-content:center;align-items:center;gap:22px;margin-top:20px}
+  .orb{width:64px;height:64px;border-radius:50%;border:3px solid var(--cyan);position:relative;box-shadow:0 0 12px var(--cyan), 0 0 28px rgba(92,225,255,.55), inset 0 0 10px rgba(92,225,255,.25)}
+  .orb::before,.orb::after,.orb i{content:"";position:absolute;left:12%;right:12%;height:3px;border-radius:2px;background:var(--cyan);box-shadow:0 0 8px var(--cyan), 0 0 14px var(--cyan-glow)}
+  .orb::before{top:28%;transform:skewY(-8deg)}
+  .orb i{top:46%;transform:skewY(-8deg);position:absolute;left:12%;right:12%;display:block}
+  .orb::after{top:64%;transform:skewY(-8deg)}
+  .orb.alt{border-color:var(--yellow);box-shadow:0 0 12px var(--yellow), 0 0 28px rgba(255,216,61,.5), inset 0 0 10px rgba(255,216,61,.25)}
+  .orb.alt::before,.orb.alt::after,.orb.alt i{background:var(--yellow);box-shadow:0 0 8px var(--yellow), 0 0 14px var(--yellow-glow)}
+  .swap-arrow{font-family:'Monoton',cursive;font-size:44px;color:var(--pink);text-shadow:0 0 10px var(--pink), 0 0 24px rgba(255,45,149,.7);line-height:1}
+  .neon-sub{margin:28px 0 0;text-align:center;font-family:'JetBrains Mono',monospace;font-size:15px;letter-spacing:.22em;text-transform:uppercase;color:var(--pink-glow);text-shadow:0 0 10px rgba(255,45,149,.8), 0 0 22px rgba(255,45,149,.5)}
+  .neon-tag{margin:16px auto 0;width:fit-content;padding:7px 16px;border:1.5px solid var(--pink);border-radius:999px;color:var(--pink-glow);font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.2em;text-transform:uppercase;box-shadow:0 0 14px rgba(255,45,149,.5), inset 0 0 8px rgba(255,45,149,.2)}
+  @keyframes flicker{0%,19%,21%,23%,80%,100%{opacity:1}20%,22%{opacity:.82}82%{opacity:.9}}
+  .flick{animation:flicker 6s infinite}
+
+  /* TOC */
+  .toc{max-width:1180px;margin:22px auto 0;padding:12px 20px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:rgba(12,5,9,.72);backdrop-filter:blur(6px);font-family:'JetBrains Mono',monospace;font-size:12px;display:flex;gap:14px;flex-wrap:wrap;justify-content:center;color:var(--ink-dim)}
+  .toc a{border:none;color:var(--ink-dim)}
+  .toc a:hover{color:var(--pink-glow)}
+
+  /* STATS */
+  .stats{max-width:1180px;margin:28px auto 0;padding:0 20px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  @media (max-width:800px){.stats{grid-template-columns:repeat(2,1fr)}}
+  .stat{border:1px solid rgba(255,255,255,.1);border-radius:12px;background:rgba(12,5,9,.68);backdrop-filter:blur(6px);padding:16px 18px;position:relative;overflow:hidden}
+  .stat::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg, var(--pink), transparent)}
+  .stat .v{font-family:'Monoton',cursive;font-weight:400;font-size:38px;line-height:1;color:var(--yellow);text-shadow:0 0 8px rgba(255,216,61,.6), 0 0 18px rgba(255,216,61,.35)}
+  .stat .l{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-dim);letter-spacing:.14em;text-transform:uppercase;margin-top:8px}
+  .stat .s{font-size:12px;color:#b9a3ad;margin-top:4px;line-height:1.45}
+
+  /* DOCS */
+  .docs{max-width:1100px;margin:28px auto 60px;padding:0 28px}
+  .kicker{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--ink-dim);margin-bottom:8px}
+  h2.sec{font-family:'Monoton',cursive;font-weight:400;font-size:46px;letter-spacing:.03em;line-height:1.08;margin:0 0 18px;color:var(--pink);text-shadow:0 0 10px rgba(255,45,149,.6), 0 0 24px rgba(255,45,149,.4)}
+  h2.sec.yellow{color:var(--yellow);text-shadow:0 0 10px var(--yellow-glow), 0 0 26px rgba(255,216,61,.5)}
+  h2.sec.cyan{color:var(--cyan);text-shadow:0 0 10px var(--cyan-glow), 0 0 26px rgba(92,225,255,.5)}
+  p.lede{color:#e9dde2;font-size:18px;line-height:1.55;max-width:64ch;text-wrap:pretty}
+  p{color:#cbb9c1;font-size:15px;line-height:1.7;max-width:72ch;text-wrap:pretty}
+  h3.sub{font-family:'Inter',sans-serif;font-weight:600;font-size:18px;margin:28px 0 10px;color:var(--ink);letter-spacing:-.005em}
+  code.inl{font-family:'JetBrains Mono',monospace;font-size:13px;background:rgba(255,45,149,.12);color:var(--pink-glow);border:1px solid rgba(255,45,149,.25);padding:1px 7px;border-radius:6px}
+
+  .section{margin:52px 0 0;padding:30px 32px 34px;border:1px solid rgba(255,255,255,.08);border-radius:16px;background:rgba(12,5,9,.68);backdrop-filter:blur(6px);scroll-margin-top:20px}
+
+  /* CODE */
+  .code{margin:14px 0 4px;background:#0a0508;border:1px solid rgba(255,255,255,.08);border-radius:10px;font-family:'JetBrains Mono',monospace;font-size:13px;overflow:hidden}
+  .code-head{display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid rgba(255,255,255,.06);color:var(--ink-dim);font-size:11px;letter-spacing:.12em;text-transform:uppercase}
+  .code pre{margin:0;padding:16px 20px;overflow-x:auto;color:#e9dde2;line-height:1.65}
+  .com{color:#7a6770}.cmd{color:var(--cyan)}.flag{color:var(--yellow)}.str{color:var(--pink-glow)}.ok{color:#7cf0a0}.warn{color:#ffb14a}
+
+  /* GRID + CARDS */
+  .grid{display:grid;gap:12px}
+  .grid.c2{grid-template-columns:repeat(2,1fr)}.grid.c3{grid-template-columns:repeat(3,1fr)}.grid.c4{grid-template-columns:repeat(4,1fr)}
+  @media (max-width:880px){.grid.c3,.grid.c4{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width:580px){.grid.c2,.grid.c3,.grid.c4{grid-template-columns:1fr}}
+  .card{border:1px solid rgba(255,255,255,.1);border-radius:12px;background:rgba(255,255,255,.02);padding:18px 20px;position:relative}
+  .card .tag{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--yellow);letter-spacing:.16em;text-transform:uppercase;margin-bottom:8px;text-shadow:0 0 8px rgba(255,216,61,.3)}
+  .card.cyan .tag{color:var(--cyan);text-shadow:0 0 8px rgba(92,225,255,.3)}
+  .card.pink .tag{color:var(--pink-glow);text-shadow:0 0 8px rgba(255,45,149,.3)}
+  .card h4{font-family:'Inter',sans-serif;font-weight:600;font-size:15.5px;margin:0 0 6px;color:var(--ink)}
+  .card p{margin:0;font-size:13.5px;color:#b6adb3;line-height:1.55}
+  .card .meta{margin-top:10px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-dim);letter-spacing:.06em;word-break:break-all}
+
+  /* TABLE */
+  .tbl{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:14px}
+  .tbl th,.tbl td{padding:11px 12px;text-align:left;border-bottom:1px solid rgba(255,255,255,.06);vertical-align:top}
+  .tbl th{color:var(--ink-dim);font-weight:500;font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-family:'JetBrains Mono',monospace}
+  .tbl td{color:#cbb9c1}
+  .tbl td.mono{font-family:'JetBrains Mono',monospace;color:var(--cyan);white-space:nowrap}
+  .tbl td.num{font-family:'JetBrains Mono',monospace;color:var(--yellow);text-align:right}
+  .tbl td.pink{color:var(--pink-glow);font-family:'JetBrains Mono',monospace}
+
+  /* SCORE */
+  .score-wrap{display:grid;grid-template-columns:320px 1fr;gap:24px;align-items:center;margin-top:14px}
+  @media (max-width:760px){.score-wrap{grid-template-columns:1fr}}
+  .score-viz{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:22px;display:grid;place-items:center;position:relative}
+  .score-viz svg{width:100%;max-width:260px}
+  .score-center{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+  .score-num{font-family:'Monoton',cursive;font-weight:400;font-size:60px;color:var(--yellow);line-height:1;text-shadow:0 0 10px var(--yellow-glow), 0 0 22px rgba(255,216,61,.5)}
+  .score-lab{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--ink-dim);letter-spacing:.2em;text-transform:uppercase;margin-top:2px}
+
+  /* BACKPRESSURE */
+  .meter{display:flex;gap:4px;margin-top:14px}
+  .meter .bar{flex:1;height:54px;border-radius:6px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.1);padding:8px 10px;display:flex;flex-direction:column;justify-content:center;gap:2px}
+  .meter .bar .r{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--ink-dim);letter-spacing:.1em}
+  .meter .bar .n{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--ink)}
+  .meter .bar.l1{border-color:rgba(124,240,160,.45)}.meter .bar.l1 .n{color:var(--green);text-shadow:0 0 8px rgba(124,240,160,.4)}
+  .meter .bar.l2{border-color:rgba(92,225,255,.45)}.meter .bar.l2 .n{color:var(--cyan);text-shadow:0 0 8px rgba(92,225,255,.4)}
+  .meter .bar.l3{border-color:rgba(255,216,61,.45)}.meter .bar.l3 .n{color:var(--yellow);text-shadow:0 0 8px rgba(255,216,61,.4)}
+  .meter .bar.l4{border-color:rgba(255,177,74,.55);background:rgba(255,177,74,.06)}.meter .bar.l4 .n{color:var(--amber);text-shadow:0 0 8px rgba(255,177,74,.4)}
+  .meter .bar.l5{border-color:rgba(255,45,149,.55);background:rgba(255,45,149,.06)}.meter .bar.l5 .n{color:var(--pink-glow);text-shadow:0 0 8px rgba(255,45,149,.4)}
+
+  /* STEPS */
+  .steps{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+  .step{flex:1 1 calc(14% - 8px);min-width:150px;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:12px 14px 14px;background:rgba(255,255,255,.02)}
+  .step .n{font-family:'Monoton',cursive;font-size:24px;color:var(--cyan);line-height:1;text-shadow:0 0 8px var(--cyan-glow), 0 0 18px rgba(92,225,255,.45)}
+  .step:nth-child(2) .n,.step:nth-child(5) .n{color:var(--pink);text-shadow:0 0 8px rgba(255,45,149,.6), 0 0 18px rgba(255,45,149,.35)}
+  .step:nth-child(3) .n,.step:nth-child(6) .n{color:var(--yellow);text-shadow:0 0 8px rgba(255,216,61,.6), 0 0 18px rgba(255,216,61,.35)}
+  .step .t{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink);margin-top:6px;letter-spacing:.08em;text-transform:uppercase}
+  .step .d{font-size:12px;color:#a99ea4;line-height:1.5;margin-top:4px}
+
+  /* ARCH */
+  .arch{margin:16px 0 4px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:radial-gradient(ellipse at 50% 50%, rgba(255,45,149,.08), transparent 70%), #0a0508;padding:22px 20px}
+  .arch svg{width:100%;height:auto;display:block}
+  .flow-diagram{background:#0a0508;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:22px 18px;overflow-x:auto;margin-top:10px}
+  .flow-diagram pre{margin:0;font-family:'JetBrains Mono',monospace;font-size:12.5px;line-height:1.75;color:#cbb9c1;white-space:pre}
+
+  /* MODES */
+  .modes-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:14px}
+  @media (max-width:980px){.modes-grid{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width:520px){.modes-grid{grid-template-columns:1fr}}
+  .mode{border:1px solid rgba(255,255,255,.1);border-radius:12px;background:rgba(255,255,255,.02);padding:16px;position:relative}
+  .mode.def{border-color:rgba(255,216,61,.5);background:linear-gradient(180deg, rgba(255,216,61,.06), rgba(255,255,255,.02))}
+  .mode .flag{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--yellow);margin-bottom:6px;word-break:break-all;text-shadow:0 0 8px rgba(255,216,61,.3)}
+  .mode h4{font-family:'Inter',sans-serif;font-weight:600;font-size:14.5px;margin:0 0 6px;color:var(--ink)}
+  .mode p{font-size:12.5px;color:#a99ea4;line-height:1.5;margin:0 0 6px}
+  .mode .use{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--cyan);text-shadow:0 0 8px rgba(92,225,255,.3)}
+  .mode .def-tag{position:absolute;top:10px;right:10px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--yellow);border:1px solid rgba(255,216,61,.4);padding:2px 6px;border-radius:999px;letter-spacing:.16em;text-shadow:0 0 6px rgba(255,216,61,.3)}
+
+  /* KARP */
+  .karp-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px}
+  @media (max-width:880px){.karp-grid{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width:520px){.karp-grid{grid-template-columns:1fr}}
+  .karp{border:1px solid rgba(255,255,255,.1);border-radius:12px;background:rgba(255,255,255,.02);padding:18px;position:relative;overflow:hidden}
+  .karp::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg, var(--pink), var(--yellow), var(--cyan), transparent);box-shadow:0 0 12px rgba(255,45,149,.4)}
+  .karp .n{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--ink-dim);letter-spacing:.2em}
+  .karp h4{font-family:'Monoton',cursive;font-weight:400;font-size:22px;margin:8px 0 10px;color:var(--pink);text-shadow:0 0 8px rgba(255,45,149,.55), 0 0 18px rgba(255,45,149,.3);letter-spacing:.02em;line-height:1.1}
+  .karp:nth-child(2) h4{color:var(--yellow);text-shadow:0 0 8px rgba(255,216,61,.55), 0 0 18px rgba(255,216,61,.3)}
+  .karp:nth-child(3) h4{color:var(--cyan);text-shadow:0 0 8px rgba(92,225,255,.55), 0 0 18px rgba(92,225,255,.3)}
+  .karp:nth-child(4) h4{color:var(--pink-glow);text-shadow:0 0 8px rgba(255,79,168,.55), 0 0 18px rgba(255,45,149,.3)}
+  .karp p{margin:0 0 8px;font-size:13px;color:#b6adb3;line-height:1.55}
+  .karp .how{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--cyan);border-top:1px dashed rgba(255,255,255,.1);padding-top:8px;margin-top:10px}
+  .karp .cred{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-dim);letter-spacing:.1em;margin-top:10px;padding-top:8px;border-top:1px dashed rgba(255,255,255,.06)}
+
+  /* PATTERNS */
+  .pat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+  @media (max-width:880px){.pat-grid{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width:520px){.pat-grid{grid-template-columns:1fr}}
+  .pat{border:1px solid rgba(255,255,255,.1);border-radius:12px;background:rgba(255,255,255,.02);padding:16px 18px}
+  .pat .n{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--yellow);letter-spacing:.16em;text-shadow:0 0 8px rgba(255,216,61,.3)}
+  .pat h4{font-family:'Inter',sans-serif;font-weight:600;font-size:14.5px;margin:6px 0 6px;color:var(--ink)}
+  .pat p{margin:0 0 8px;font-size:12.5px;color:#a99ea4;line-height:1.55}
+  .pat .src{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--ink-dim)}
+
+  /* HOOKS */
+  .hooks{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+  @media (max-width:720px){.hooks{grid-template-columns:1fr}}
+  .hook{border:1px solid rgba(255,255,255,.1);border-radius:10px;background:rgba(255,255,255,.02);padding:14px 16px}
+  .hook .h{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--pink-glow);margin-bottom:4px;text-shadow:0 0 8px rgba(255,45,149,.3)}
+  .hook p{margin:0;font-size:12.5px;color:#a99ea4;line-height:1.55}
+  .hook .fires{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--ink-dim);margin-top:6px}
+
+  /* VARIANTS */
+  .var-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+  @media (max-width:820px){.var-grid{grid-template-columns:1fr}}
+  .var{border:1px solid rgba(255,255,255,.1);border-radius:14px;background:rgba(255,255,255,.02);padding:22px 24px}
+  .var .tag{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:8px}
+  .var.priv .tag{color:var(--cyan);text-shadow:0 0 8px rgba(92,225,255,.4)}
+  .var.pub .tag{color:var(--yellow);text-shadow:0 0 8px rgba(255,216,61,.4)}
+  .var h3{font-family:'Monoton',cursive;font-weight:400;font-size:30px;margin:0 0 10px;letter-spacing:.02em;line-height:1.1}
+  .var.pub h3{color:var(--yellow);text-shadow:0 0 10px rgba(255,216,61,.55), 0 0 22px rgba(255,216,61,.3)}
+  .var.priv h3{color:var(--cyan);text-shadow:0 0 10px rgba(92,225,255,.55), 0 0 22px rgba(92,225,255,.3)}
+  .var ul{margin:10px 0 0;padding-left:18px;font-size:13.5px;color:#b6adb3;line-height:1.85}
+  .var ul code{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--pink-glow)}
+
+  /* TERMINAL */
+  .term-demo{background:#0a0508;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:20px 22px;font-family:'JetBrains Mono',monospace;font-size:12.5px;line-height:1.75;color:#cbb9c1;overflow-x:auto;margin-top:10px}
+  .term-demo .ln{white-space:pre}
+
+  /* TREE */
+  .tree{background:#0a0508;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:20px 22px;font-family:'JetBrains Mono',monospace;font-size:12.5px;line-height:1.75;color:#cbb9c1;overflow-x:auto;margin-top:10px}
+  .tree .dir{color:var(--cyan);text-shadow:0 0 6px rgba(92,225,255,.3)}
+  .tree .f{color:var(--ink)}
+  .tree .anno{color:var(--ink-dim)}
+  .tree .hot{color:var(--pink-glow);text-shadow:0 0 6px rgba(255,45,149,.3)}
+
+  /* ICON GRID */
+  .icon-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:10px;margin-top:14px}
+  @media (max-width:980px){.icon-grid{grid-template-columns:repeat(4,1fr)}}
+  @media (max-width:520px){.icon-grid{grid-template-columns:repeat(3,1fr)}}
+  .ico{border:1px solid rgba(255,255,255,.1);border-radius:10px;background:rgba(255,255,255,.02);padding:16px 8px;text-align:center}
+  .ico svg{width:30px;height:30px;display:block;margin:0 auto 8px;filter:drop-shadow(0 0 6px currentColor)}
+  .ico:nth-child(3n+1) svg{color:var(--pink-glow)}
+  .ico:nth-child(3n+2) svg{color:var(--yellow)}
+  .ico:nth-child(3n+3) svg{color:var(--cyan)}
+  .ico .lb{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-dim)}
+
+  /* CHANGELOG */
+  .chl{margin-top:14px;display:grid;gap:10px}
+  .chl .row{border:1px solid rgba(255,255,255,.1);border-radius:10px;background:rgba(255,255,255,.02);padding:14px 18px;display:grid;grid-template-columns:110px 1fr;gap:14px;align-items:start}
+  @media (max-width:640px){.chl .row{grid-template-columns:1fr}}
+  .chl .v{font-family:'Monoton',cursive;font-size:22px;line-height:1;color:var(--yellow);text-shadow:0 0 8px var(--yellow-glow), 0 0 18px rgba(255,216,61,.4)}
+  .chl .row.cyan .v{color:var(--cyan);text-shadow:0 0 8px var(--cyan-glow), 0 0 18px rgba(92,225,255,.4)}
+  .chl .row.pink .v{color:var(--pink);text-shadow:0 0 8px rgba(255,45,149,.5), 0 0 18px rgba(255,45,149,.3)}
+  .chl .t{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--ink-dim);letter-spacing:.12em;margin-top:4px}
+  .chl ul{margin:6px 0 0;padding-left:18px;font-size:13px;color:#b6adb3;line-height:1.7}
+  .chl ul code{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--pink-glow)}
+
+  /* FOOT */
+  .foot{text-align:center;padding:28px 16px 60px;color:var(--ink-dim);font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.16em;text-transform:uppercase}
+  .foot span{color:var(--pink-glow);text-shadow:0 0 8px rgba(255,45,149,.4)}
+</style>
+</head>
+<body>
+<div class="brick-wall"></div>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState } = React;
+
+/* ============ DATA ============ */
+
+const STATS = [
+  {v:"9.0",  l:"Default gate",          s:"Weighted fidelity, 6 criteria"},
+  {v:"5",    l:"Modes",                 s:"loop · solo · critique · ref · iter"},
+  {v:"7",    l:"Round steps",           s:"request → gate, every round"},
+  {v:"9+",   l:"Patterns",              s:"Token-aware by design"},
+];
+
+const QUICK = [
+  {n:"01", t:"Install",   c:"curl -fsSL https://cdn.jsdelivr.net/gh/RazvanGabrielNiculae/picasso-claude-design-claude-code-bridge-loop@main/scripts/install-oneliner.sh | bash"},
+  {n:"02", t:"Verify",    c:"picasso-bridge verify --smoke"},
+  {n:"03", t:"Run",       c:'/picasso --design-loop "hero cinematic for B2B SaaS" --scope complex'},
+];
+
+const REQS = [
+  {k:"Claude Code", v:"≥ 0.2.0", note:"CLI with custom commands + subagents + hooks"},
+  {k:"Claude plan", v:"Pro · Max · Team · Enterprise", note:"Needed for claude.ai/design access"},
+  {k:"Chrome", v:"latest", note:"Authenticated session on claude.ai"},
+  {k:"chrome-mcp", v:"latest", note:"MCP browser transport · hangwin/mcp-chrome"},
+  {k:"webdesign-mcp", v:"latest", note:"Scrape · render · score"},
+  {k:"Node", v:"≥ 18", note:"For MCP server runtimes"},
+  {k:"jq · bash", v:"any", note:"Used by hooks and install.sh"},
+];
+
+const REFS = [
+  {tag:"CORE · ORCHESTRATOR",  name:"Claude Code (CLI)",       role:"Host runtime",
+   url:"docs.claude.com/claude-code", tone:"pink",
+   desc:"Hosts the /picasso slash command, the pdl-conductor subagent, and six lifecycle hooks."},
+  {tag:"CORE · DESIGN SIDE",   name:"Claude Design (web)",     role:"Visual proposal engine",
+   url:"claude.ai/design", tone:"cyan",
+   desc:"Browser-based design tool driven through the user's authenticated tab — no private API."},
+  {tag:"TRANSPORT",            name:"chrome-mcp",              role:"MCP browser transport",
+   url:"github.com/hangwin/mcp-chrome", tone:"cyan",
+   desc:"Exposes an authenticated Chrome window: navigate, click, type, upload, screenshot, read."},
+  {tag:"MEASUREMENT",          name:"webdesign-mcp",           role:"Scrape · render · score",
+   url:"github.com/webdesign-mcp/webdesign-mcp", tone:"",
+   desc:"Extracts tokens, renders candidate previews at multiple breakpoints, returns weighted fidelity score."},
+  {tag:"PROTOCOL",             name:"Model Context Protocol",  role:"Wire format for both MCP servers",
+   url:"modelcontextprotocol.io", tone:"pink",
+   desc:"Any MCP-compliant client can swap in. Picasso is not bound to Anthropic-specific transport."},
+  {tag:"CONVENTION",           name:"DESIGN.md (9 sections)",  role:"Single-source design contract",
+   url:"docs/PROMPT-TEMPLATES.md", tone:"",
+   desc:"Colors · typography · components · layout · motion · depth · brand · responsive · accessibility."},
+];
+
+const STEPS = [
+  ["01","Request",   "browser_batch: navigate → form_input → wait → screenshot(800px) → get_text"],
+  ["02","Extract",   "scrape_reference with SHA-256 hash cache — skip if HTML unchanged"],
+  ["03","Implement", "Zero-context subagent. Only changed DESIGN.md sections (~200 tok)."],
+  ["04","Render",    "Desktop always. Mobile only if previous responsive score < 8.0."],
+  ["05","Score",     "Fast model for ΔE + grid + tokens. Standard for gap synthesis."],
+  ["06","Gaps",      "3 lines · goal-declared: current → target · 15 words each."],
+  ["07","Gate",      "total ≥ gate → APPROVED · stagnation · early-abort · else next."],
+];
+
+const SCORE = [
+  {name:"Colors",     w:25, method:"ΔE CIE2000 palette comparison per token"},
+  {name:"Typography", w:20, method:"Family · scale · weight · line-height"},
+  {name:"Layout",     w:20, method:"Grid alignment · ±2px tolerance"},
+  {name:"Components", w:15, method:"Structural match: presence + hierarchy"},
+  {name:"Motion",     w:10, method:"Duration · easing · transitions"},
+  {name:"Responsive", w:10, method:"8 breakpoints: 320 → 1920"},
+];
+
+const BP = [
+  {r:"<60%",   n:"NORMAL",  s:"All steps enabled"},
+  {r:"60–75%", n:"WARN",    s:"Skip mobile render if responsive ≥ 8.5"},
+  {r:"75–85%", n:"DEGRADE", s:"Cache-only extraction; lazy reads"},
+  {r:"85–95%", n:"SWITCH",  s:"Fast model everywhere; 2-line gaps"},
+  {r:">95%",   n:"PAUSED",  s:"checkpoint.json → exit → resumable"},
+];
+
+const MODES = [
+  {flag:"--design-loop",           name:"Loop",      desc:"Bidirectional loop. Runs 1..N rounds until the gate is met.", use:"Any front-end feature from scratch", def:true},
+  {flag:"--design-solo",           name:"Solo",      desc:"Single pass: one Claude Design turn, one implementation, stop.", use:"Quick exploration / prototypes"},
+  {flag:"--design-critique",       name:"Critique",  desc:"Audit mode. Claude Design reviews your current implementation.", use:"Design-debt audit on existing code"},
+  {flag:"--design-reference <url>", name:"Reference", desc:"Reverse-engineer tokens from a live site. Seeds DESIGN.md + tokens.json.", use:'"Feel like linear.app"'},
+  {flag:"--design-iterate",        name:"Iterate",   desc:"Polish pass after APPROVED. Gate = prior + 0.3.", use:"Motion + micro-interaction polish"},
+];
+
+const SCOPES = [
+  ["simple",  "8.0", "3",  "no",  "pricing toggle"],
+  ["medium",  "8.5", "5",  "no",  "pricing section"],
+  ["complex", "9.0", "7",  "yes", "full landing page"],
+  ["mega",    "9.0", "10", "yes", "5-page site"],
+];
+
+const KARP = [
+  {n:"01", h:"Think First",
+   p:"Every inferred token surfaces as an explicit ASSUMPTIONS block before the first browser call. The user corrects it inline; no silent assumptions propagate into the loop.",
+   how:"→ ASSUMPTIONS: colors · typography · components · brand",
+   cred:"after Andrej Karpathy · LLM coding notes"},
+  {n:"02", h:"Simplicity",
+   p:"The implementation subagent is constrained to the minimum code that closes the gap. No adjacent refactors, no speculative features, no drive-by cleanups.",
+   how:"→ CONSTRAINTS: no refactor · no new features · no noise",
+   cred:"after Andrej Karpathy · LLM coding notes"},
+  {n:"03", h:"Surgical Edits",
+   p:"The subagent touches only files tied to changed DESIGN.md sections. A sha256 idempotency check guarantees no spurious git diffs.",
+   how:"→ idempotent writes · changed sections only",
+   cred:"after Simon Willison · small, reviewable diffs"},
+  {n:"04", h:"Goal-Led State",
+   p:"Gaps are state declarations, not imperatives. The gate score is the objective function — the loop iterates toward it, not away from vague feedback.",
+   how:'→ motion: 400ms → 600ms (not "increase duration")',
+   cred:"after Anthropic cookbook · agentic loops"},
+];
+
+const PATTERNS = [
+  {n:"01", h:"Structured prompts",      p:"Key:value blocks, never prose. 5× compression over naive round-N prompts.",                        src:"pattern · core"},
+  {n:"02", h:"Content-hash cache",      p:"Skip scrape_reference when design HTML hash is unchanged from the prior round.",                   src:"fingerprint dedup"},
+  {n:"03", h:"Fingerprint dedup",       p:"hash(tokens + score) identical across rounds → STAGNATED. Early exit, no wasted calls.",            src:"pattern · core"},
+  {n:"04", h:"Lazy section reads",      p:"Read only the DESIGN.md sections that changed. Average: 2 of 9 sections per round.",                src:"pattern · local"},
+  {n:"05", h:"Model routing",           p:"Fast for scoring (deterministic ΔE). Standard for gap synthesis. Large only on stagnation recovery.", src:"pattern · core"},
+  {n:"06", h:"Adaptive rendering",      p:"Skip mobile render whenever prior responsive score ≥ 8.0. Desktop always on.",                      src:"pattern · local"},
+  {n:"07", h:"Zero-context subagent",   p:"Implementation gets a scoped ~200 tok brief, not the 2,000 tok parent context.",                    src:"pattern · agentic"},
+  {n:"08", h:"Idempotency check",       p:"sha256 of target vs. pending write. Unchanged files never touched — clean diffs.",                   src:"pattern · core"},
+  {n:"09", h:"Context backpressure",    p:"Five degradation levels. Checkpoint on PAUSED. Resumable in a new session.",                         src:"pattern · core"},
+];
+
+const HOOKS = [
+  ["pdl-autodetect",  'Suggests /picasso when handoff phrases ("claude.ai/design", "export") appear in the prompt.', "UserPromptSubmit"],
+  ["pdl-pre-round",   "Budget guard. Aborts if .pdl/ artifacts exceed 50 MB or remaining budget < round estimate.",  "Pre-round"],
+  ["pdl-post-round",  "Cache report + economy.jsonl append. exit 2 = force APPROVED · exit 3 = force abort.",        "Post-round"],
+  ["pdl-stagnation",  "User-definable. Lower gate, switch mode, or alert. Fires on score plateau or fingerprint match.", "Stagnation"],
+  ["pdl-approved",    "User-definable. Auto-commit, open PR, send notification.",                                     "Approved"],
+  ["pdl-failed",      "User-definable. Alert, cleanup, log trajectory for post-mortem.",                              "Failed"],
+];
+
+const CHANGELOG = [
+  {v:"v1.0", tone:"", t:"2026-04 · FIRST RELEASE · combined", items:[
+    "Unified public repo: v0.1 narrative + v0.2 operator additions",
+    "Adds: context backpressure · 10 token-optimizations · Karpathy principles · 5 modes + 4 scope presets",
+    "Adds: model routing · zero-context subagent · trajectory abort · idempotent writes",
+    "Adds: 6 lifecycle hooks · wizard installer · economy.jsonl tracking",
+    "Adds: reference mode · iterate mode · critique mode (was loop-only)",
+  ]},
+  {v:"v0.2", tone:"cyan", t:"operator-grade internals", items:[
+    "Conductor phases 1→4 · ASSUMPTIONS surfacing · DESIGN.md delta reads",
+    "STAGNATED · EARLY_ABORT · PAUSED states · fingerprint deduplication",
+    "Backpressure meter · checkpoint.json · resumable sessions",
+  ]},
+  {v:"v0.1", tone:"pink", t:"original narrative · seed", items:[
+    "/picasso slash command + pdl-conductor subagent",
+    "Six-criterion weighted fidelity gate · default 9.0",
+    "Seven-step round: request · extract · implement · render · score · gaps · gate",
+    "MCP transport via chrome-mcp + webdesign-mcp",
+  ]},
+];
+
+const ICONS = [
+  {k:"loop",        svg:<><circle cx="14" cy="14" r="9" fill="none" stroke="currentColor" strokeWidth="1.6"/><path d="M22 9 L22 14 L17 14" fill="none" stroke="currentColor" strokeWidth="1.6"/></>},
+  {k:"gate",        svg:<><path d="M5 22 L5 6 M11 22 L11 6 M17 22 L17 6 M23 22 L23 6" stroke="currentColor" strokeWidth="1.6"/><path d="M7 10 L9 12 L13 8" stroke="currentColor" strokeWidth="1.6" fill="none"/></>},
+  {k:"score",       svg:<><path d="M3 18 A11 11 0 0 1 25 18" fill="none" stroke="currentColor" strokeWidth="1.6"/><path d="M19 13 L22 10" stroke="currentColor" strokeWidth="1.6"/><circle cx="14" cy="18" r="1.6" fill="currentColor"/></>},
+  {k:"round",       svg:<><circle cx="14" cy="14" r="9" fill="none" stroke="currentColor" strokeWidth="1.6"/><path d="M14 5 A9 9 0 0 1 22 9" fill="none" stroke="currentColor" strokeWidth="2.4"/></>},
+  {k:"stagnation",  svg:<><path d="M3 18 L10 18 L12 11 L16 18 L26 18" fill="none" stroke="currentColor" strokeWidth="1.6"/><circle cx="21" cy="18" r="1.4" fill="currentColor"/></>},
+  {k:"approved",    svg:<><circle cx="14" cy="14" r="9" fill="none" stroke="currentColor" strokeWidth="1.6"/><path d="M9 14 L13 18 L20 11" fill="none" stroke="currentColor" strokeWidth="1.8"/></>},
+  {k:"failed",      svg:<><circle cx="14" cy="14" r="9" fill="none" stroke="currentColor" strokeWidth="1.6"/><path d="M10 10 L18 18 M18 10 L10 18" stroke="currentColor" strokeWidth="1.8"/></>},
+  {k:"paused",      svg:<><rect x="6" y="14" width="16" height="6" fill="none" stroke="currentColor" strokeWidth="1.4"/><path d="M11 9 L11 13 M17 9 L17 13" stroke="currentColor" strokeWidth="1.8"/></>},
+  {k:"budget",      svg:<><ellipse cx="14" cy="10" rx="8" ry="2.5" fill="none" stroke="currentColor" strokeWidth="1.4"/><path d="M6 10 L6 18 A8 2.5 0 0 0 22 18 L22 10" fill="none" stroke="currentColor" strokeWidth="1.4"/></>},
+  {k:"cache",       svg:<><path d="M14 3 L7 16 L13 16 L11 25 L21 12 L15 12 Z" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/></>},
+  {k:"subagent",    svg:<><rect x="4" y="6" width="20" height="16" rx="2" fill="none" stroke="currentColor" strokeWidth="1.4"/><rect x="9" y="11" width="10" height="6" rx="1" fill="none" stroke="currentColor" strokeWidth="1.4"/></>},
+  {k:"fingerprint", svg:<><path d="M14 6 A8 8 0 0 0 7 14 L7 20 M14 6 A8 8 0 0 1 21 14 L21 16 M14 11 L14 22 M11 14 L11 22 M17 14 L17 22" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></>},
+  {k:"router",      svg:<><circle cx="7" cy="14" r="2" fill="currentColor"/><path d="M9 14 L16 8 M9 14 L16 14 M9 14 L16 20" stroke="currentColor" strokeWidth="1.4"/><circle cx="18" cy="8" r="1.6" fill="none" stroke="currentColor" strokeWidth="1.4"/><circle cx="18" cy="14" r="1.6" fill="none" stroke="currentColor" strokeWidth="1.4"/><circle cx="18" cy="20" r="1.6" fill="none" stroke="currentColor" strokeWidth="1.4"/></>},
+  {k:"hook",        svg:<><path d="M14 5 L14 14 A4 4 0 0 1 10 18 L7 18" fill="none" stroke="currentColor" strokeWidth="1.6"/><circle cx="14" cy="4" r="1.4" fill="currentColor"/></>},
+  {k:"assumptions", svg:<><path d="M5 8 A2 2 0 0 1 7 6 L21 6 A2 2 0 0 1 23 8 L23 18 A2 2 0 0 1 21 20 L14 20 L10 24 L10 20 L7 20 A2 2 0 0 1 5 18 Z" fill="none" stroke="currentColor" strokeWidth="1.4"/></>},
+  {k:"surgical",    svg:<><path d="M7 19 L15 11 L19 15 L11 23 Z" fill="none" stroke="currentColor" strokeWidth="1.4"/><path d="M15 7 L21 13" stroke="currentColor" strokeWidth="1.6"/><circle cx="22" cy="14" r="1.2" fill="currentColor"/></>},
+];
+
+/* ============ COMPONENTS ============ */
+
+function Neon(){
+  return (
+    <div className="sign-wrap">
+      <div className="cable c1" /><div className="cable c2" /><div className="cable c3" />
+      <div className="sign">
+        <span className="bracket tl"/><span className="bracket tm"/><span className="bracket tr"/>
+        <span className="bracket bl"/><span className="bracket bm"/><span className="bracket br"/>
+        <h1 className="neon-title flick">
+          <span>Picasso</span>
+          <span className="bridge">Bridge</span>
+        </h1>
+        <div className="neon-orbs">
+          <div className="orb"><i/></div>
+          <div className="swap-arrow">⇄</div>
+          <div className="orb alt"><i/></div>
+        </div>
+        <p className="neon-sub">Design&nbsp;&nbsp;·&nbsp;&nbsp;Implement&nbsp;&nbsp;·&nbsp;&nbsp;Converge</p>
+        <div className="neon-tag">v1.0 · first release · 5 modes · 9 patterns · MIT</div>
+      </div>
+    </div>
+  );
+}
+
+function TOC(){
+  const items = [
+    ["#about","01 about"],["#why","02 why"],["#quick","03 quickstart"],["#reqs","04 requirements"],
+    ["#refs","05 deps"],["#arch","06 architecture"],["#flow","07 round flow"],
+    ["#score","08 gate"],["#tokens","09 tokens"],["#backpressure","10 backpressure"],
+    ["#modes","11 modes"],["#karpathy","12 karpathy"],["#patterns","13 patterns"],
+    ["#variants","14 variants"],["#hooks","15 hooks"],["#tree","16 repo"],
+    ["#install","17 install"],["#demo","18 demo"],["#changelog","19 changelog"],["#icons","20 icons"],
+  ];
+  return <div className="toc">{items.map(([h,l])=>(<a key={h} href={h}>{l}</a>))}</div>;
+}
+
+function Stats(){
+  return <div className="stats">{STATS.map(s=>(
+    <div className="stat" key={s.l}>
+      <div className="v">{s.v}</div><div className="l">{s.l}</div><div className="s">{s.s}</div>
+    </div>
+  ))}</div>;
+}
+
+function Code({title, children}){
+  return (
+    <div className="code">
+      <div className="code-head">
+        <span style={{color:"var(--pink-glow)"}}>●</span><span style={{color:"var(--yellow)"}}>●</span><span style={{color:"var(--cyan)"}}>●</span>
+        &nbsp;&nbsp;{title}
+      </div>
+      <pre>{children}</pre>
+    </div>
+  );
+}
+
+/* ============ SECTIONS ============ */
+
+function SecAbout(){
+  return (
+    <div className="section" id="about">
+      <div className="kicker">01 · About</div>
+      <h2 className="sec">Design in the browser, ship from the terminal.</h2>
+      <p className="lede">
+        Picasso Bridge is an orchestration layer for Claude Code. You write one line in your
+        terminal. The system handles the brief, opens a Claude Design session in your
+        browser, extracts design tokens, writes the implementation, renders it, scores the
+        fidelity delta, synthesizes gap fixes, runs another round — and stops only when the
+        gate is met.
+      </p>
+      <Code title="the loop · one line">
+<span className="com">{"# user prompt → /picasso → Claude Design (browser) → design tokens"}</span>{"\n"}
+<span className="com">{"# → implementation (code) → fidelity scoring → gap synthesis → refinement"}</span>{"\n"}
+<span className="com">{"# → repeat until gate score ≥ 9.0 → APPROVED"}</span>
+      </Code>
+      <h3 className="sub">Who it's for</h3>
+      <p>Front-end and full-stack engineers on Claude Code; design engineers who want a structured loop; solo builders shipping marketing sites, landings, SaaS UIs, and portfolio work. Requires a Claude Pro / Max / Team / Enterprise plan for Claude Design access.</p>
+      <h3 className="sub">What it replaces</h3>
+      <p>The copy-paste handoff. "Does it match the design?" becomes a repeatable numeric score across six weighted criteria. Every round is deterministic and inspectable — artifacts land in <code className="inl">.pdl/rounds/NN/</code>.</p>
+      <h3 className="sub">What it is not</h3>
+      <p>Not a Figma-to-code service. Not a screenshot classifier. Not a separate app. It is a narrow control-plane: a single command, a single subagent, six hooks, two MCP dependencies. Remove the command and there is nothing to uninstall.</p>
+    </div>
+  );
+}
+
+function SecWhy(){
+  return (
+    <div className="section" id="why">
+      <div className="kicker">02 · Why it exists</div>
+      <h2 className="sec yellow">The handoff is where design dies.</h2>
+      <p className="lede">
+        Designers produce a visual in Claude Design. Engineers implement it in code. Between
+        those two steps, fidelity leaks: tokens get approximated, spacing drifts, motion gets
+        dropped, and "does it match?" becomes a subjective argument in review.
+      </p>
+      <div className="grid c2" style={{marginTop:8}}>
+        <div className="card pink">
+          <div className="tag">THE PROBLEM</div>
+          <h4>Unmeasured fidelity</h4>
+          <p>Every round of manual review is a new guess. Quality regresses silently. No single source of truth for what "done" means.</p>
+        </div>
+        <div className="card" style={{borderColor:"rgba(124,240,160,.35)"}}>
+          <div className="tag" style={{color:"var(--green)"}}>THE ANSWER</div>
+          <h4>One numeric gate, six weighted criteria</h4>
+          <p>ΔE color distance, grid tolerance, typography match, component hierarchy, motion parameters, responsive coverage — one score in [0, 10].</p>
+        </div>
+        <div className="card pink">
+          <div className="tag">THE PROBLEM</div>
+          <h4>Context bloat across rounds</h4>
+          <p>Naive loops re-read the brief every round, append gap history indefinitely, and re-scrape unchanged references. Round-N overhead grows monotonically.</p>
+        </div>
+        <div className="card" style={{borderColor:"rgba(124,240,160,.35)"}}>
+          <div className="tag" style={{color:"var(--green)"}}>THE ANSWER</div>
+          <h4>Delta-only state per round</h4>
+          <p>Content-hash cache, fingerprint dedup, lazy section reads, zero-context subagent, model routing, adaptive rendering — all on by default.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SecQuick(){
+  return (
+    <div className="section" id="quick">
+      <div className="kicker">03 · Quick start</div>
+      <h2 className="sec cyan">Three commands.</h2>
+      <p>From zero to a running loop in under a minute, assuming Claude Code and a Pro plan are already in place.</p>
+      <div className="grid c3" style={{marginTop:14}}>
+        {QUICK.map(q=>(
+          <div className="card cyan" key={q.n}>
+            <div className="tag">STEP {q.n}</div>
+            <h4>{q.t}</h4>
+            <div style={{fontFamily:"JetBrains Mono",fontSize:12,color:"var(--ink)",background:"#0a0508",padding:"10px 12px",borderRadius:8,marginTop:8,border:"1px solid rgba(255,255,255,.08)",wordBreak:"break-all",lineHeight:1.55}}>{q.c}</div>
+          </div>
+        ))}
+      </div>
+      <h3 className="sub">What happens on first run</h3>
+      <p>
+        The conductor surfaces an <code className="inl">ASSUMPTIONS</code> block (inferred colors, type, components, brand tone), waits for your confirmation,
+        writes <code className="inl">DESIGN.md</code> with nine sections, opens a new Claude Design tab through Chrome MCP, and starts Round 1.
+        Every round lands under <code className="inl">.pdl/rounds/NN/</code>. On APPROVED, intermediate rounds are pruned and a final 1440px screenshot is saved.
+      </p>
+    </div>
+  );
+}
+
+function SecReqs(){
+  return (
+    <div className="section" id="reqs">
+      <div className="kicker">04 · Requirements</div>
+      <h2 className="sec yellow">What you need on your machine.</h2>
+      <p>Nothing exotic. Picasso is a thin layer; every dependency is already part of a working Claude Code + MCP setup.</p>
+      <table className="tbl">
+        <thead><tr><th>requirement</th><th>version</th><th>note</th></tr></thead>
+        <tbody>
+          {REQS.map(r=>(
+            <tr key={r.k}>
+              <td className="mono">{r.k}</td>
+              <td style={{color:"var(--yellow)",fontFamily:"JetBrains Mono",fontSize:12}}>{r.v}</td>
+              <td>{r.note}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <h3 className="sub">A note on Claude plan</h3>
+      <p>
+        <code className="inl">claude.ai/design</code> is a feature of paid Claude plans. Picasso drives it through the browser tab you already use — no separate API key,
+        no private endpoint. If the session expires, the conductor reports <code className="inl">auth: needs refresh</code> and pauses cleanly.
+      </p>
+    </div>
+  );
+}
+
+function SecRefs(){
+  return (
+    <div className="section" id="refs">
+      <div className="kicker">05 · Dependencies &amp; references</div>
+      <h2 className="sec cyan">What it's built on.</h2>
+      <p>A thin orchestration on top of two MCP servers and the Claude Code runtime. Every external piece, its role, its link.</p>
+      <div className="grid c2" style={{marginTop:14}}>
+        {REFS.map(r=>(
+          <div className={"card " + r.tone} key={r.name}>
+            <div className="tag">{r.tag}</div>
+            <h4>{r.name}</h4>
+            <p>{r.desc}</p>
+            <div className="meta">{r.role} · {r.url}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SecArch(){
+  return (
+    <div className="section" id="arch">
+      <div className="kicker">06 · Architecture</div>
+      <h2 className="sec yellow">Three nodes, one closed loop.</h2>
+      <p className="lede">
+        Claude Code owns the brief and the state machine. Claude Design produces the visual
+        target. webdesign-mcp scrapes tokens, renders a preview, scores the delta. Chrome MCP
+        is the browser transport that bridges the terminal to the web tab.
+      </p>
+      <div className="arch">
+        <svg viewBox="0 0 900 440" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <filter id="glow"><feGaussianBlur stdDeviation="2.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            <marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ffd83d"/></marker>
+            <marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#5ce1ff"/></marker>
+            <marker id="ap" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ff2d95"/></marker>
+          </defs>
+          <g filter="url(#glow)">
+            <rect x="20" y="20" width="860" height="62" rx="12" fill="rgba(12,5,9,.6)" stroke="#ff2d95" strokeWidth="1.5"/>
+            <text x="42" y="50" fontFamily="JetBrains Mono" fontSize="11" fill="#b9a3ad" letterSpacing="2">USER TERMINAL</text>
+            <text x="42" y="70" fontFamily="JetBrains Mono" fontSize="13" fill="#f8eef2">/picasso --design-loop "hero cinematic, dark elite" --scope complex</text>
+            <path d="M450 88 L450 108" stroke="#ff2d95" strokeWidth="2" markerEnd="url(#ap)"/>
+            <rect x="20" y="115" width="860" height="56" rx="12" fill="rgba(12,5,9,.6)" stroke="#ffd83d" strokeWidth="1.5"/>
+            <text x="42" y="140" fontFamily="Monoton" fontSize="18" fill="#ffd83d">/picasso</text>
+            <text x="145" y="140" fontFamily="JetBrains Mono" fontSize="11" fill="#b9a3ad">parses: mode · scope · gate · rounds · budget · task</text>
+            <text x="42" y="160" fontFamily="JetBrains Mono" fontSize="10" fill="#cdb7c0" letterSpacing="1.2">modes: loop · solo · critique · reference · iterate</text>
+            <path d="M450 176 L450 196" stroke="#ffd83d" strokeWidth="2" markerEnd="url(#ag)"/>
+            <rect x="20" y="203" width="860" height="122" rx="12" fill="rgba(12,5,9,.6)" stroke="#5ce1ff" strokeWidth="1.5"/>
+            <text x="42" y="228" fontFamily="Monoton" fontSize="16" fill="#5ce1ff">pdl-conductor</text>
+            <text x="220" y="228" fontFamily="JetBrains Mono" fontSize="10" fill="#b9a3ad" letterSpacing="1.5">SUBAGENT · LOOP OWNER</text>
+            <g fontFamily="JetBrains Mono" fontSize="11" fill="#cdb7c0">
+              <text x="42" y="252">PHASE 1  setup    verify chrome-mcp · webdesign-mcp · auth · budget preflight</text>
+              <text x="42" y="270">PHASE 2  brief    DESIGN.md 9 sections · ASSUMPTIONS surface</text>
+              <text x="42" y="288">PHASE 3  loop     request · extract · implement · render · score · gaps · gate</text>
+              <text x="42" y="306">PHASE 4  closure  APPROVED.md | FAILED.md · artifact prune · economy.jsonl</text>
+            </g>
+            <path d="M200 330 L140 360" stroke="#5ce1ff" strokeWidth="2" markerEnd="url(#ab)"/>
+            <path d="M700 330 L760 360" stroke="#ffd83d" strokeWidth="2" markerEnd="url(#ag)"/>
+            <path d="M450 330 L450 360" stroke="#ff2d95" strokeWidth="2" markerEnd="url(#ap)"/>
+            <rect x="20" y="365" width="240" height="60" rx="12" fill="rgba(12,5,9,.6)" stroke="#5ce1ff" strokeWidth="1.5"/>
+            <text x="42" y="390" fontFamily="JetBrains Mono" fontSize="11" fill="#5ce1ff" letterSpacing="2">CHROME MCP · BROWSER</text>
+            <text x="42" y="410" fontFamily="JetBrains Mono" fontSize="11" fill="#b9a3ad">claude.ai/design · your session</text>
+            <rect x="330" y="365" width="240" height="60" rx="12" fill="rgba(12,5,9,.6)" stroke="#ff2d95" strokeWidth="1.5"/>
+            <text x="352" y="390" fontFamily="JetBrains Mono" fontSize="11" fill="#ff2d95" letterSpacing="2">LOCAL PROJECT</text>
+            <text x="352" y="410" fontFamily="JetBrains Mono" fontSize="11" fill="#b9a3ad">src/ · DESIGN.md · .pdl/</text>
+            <rect x="640" y="365" width="240" height="60" rx="12" fill="rgba(12,5,9,.6)" stroke="#ffd83d" strokeWidth="1.5"/>
+            <text x="662" y="390" fontFamily="JetBrains Mono" fontSize="11" fill="#ffd83d" letterSpacing="2">WEBDESIGN-MCP</text>
+            <text x="662" y="410" fontFamily="JetBrains Mono" fontSize="11" fill="#b9a3ad">scrape · render · score</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+function SecFlow(){
+  return (
+    <div className="section" id="flow">
+      <div className="kicker">07 · Round lifecycle</div>
+      <h2 className="sec cyan">Seven steps, one feedback arrow.</h2>
+      <p>Each round is the same seven-step cycle. The gate at step seven decides: approve, loop, stagnate, or early-abort.</p>
+      <div className="flow-diagram"><pre>
+<span style={{color:"var(--pink-glow)"}}>ROUND 0 — BRIEF</span>{"\n"}
+  └── DESIGN.md · 9 sections · ~400 tok{"\n"}
+      └── ASSUMPTIONS surface (if brief ambiguous){"\n"}
+          └── Round-0 prompt to Claude Design · ~250 tok{"\n"}
+{"\n"}
+<span style={{color:"var(--yellow)"}}>ROUND N — LOOP</span>{"\n"}
+  ├── 01 REQUEST     browser_batch → navigate · form_input · screenshot · get_text{"\n"}
+  ├── 02 EXTRACT     scrape_reference with SHA-256 hash cache (skip if unchanged){"\n"}
+  ├── 03 IMPLEMENT   zero-context subagent · only changed DESIGN.md sections · ~200 tok{"\n"}
+  ├── 04 RENDER      desktop always · mobile skipped if prior responsive ≥ 8.0{"\n"}
+  ├── 05 SCORE       fast model for ΔE / grid / tokens · standard for gap synthesis{"\n"}
+  ├── 06 GAPS        3 lines max · <span style={{color:"var(--cyan)"}}>goal-declared: current → target</span>{"\n"}
+  └── 07 GATE        total ≥ gate → APPROVED{"\n"}
+                      fingerprint repeated OR Δ &lt; 0.2 for 2 rounds → <span style={{color:"var(--amber)"}}>STAGNATED</span>{"\n"}
+                      best + 0.4 × rounds_remaining &lt; gate → <span style={{color:"var(--amber)"}}>EARLY_ABORT</span>{"\n"}
+                      context &gt; 95% → <span style={{color:"var(--amber)"}}>PAUSED</span> (checkpoint, resumable){"\n"}
+{"\n"}
+<span style={{color:"var(--green)"}}>APPROVED</span>{"\n"}
+  └── full-res 1440px screenshot · APPROVED.md · prune intermediate artifacts
+</pre></div>
+      <h3 className="sub">Seven steps, horizontal</h3>
+      <div className="steps">
+        {STEPS.map(([n,t,d])=>(
+          <div className="step" key={n}><div className="n">{n}</div><div className="t">{t}</div><div className="d">{d}</div></div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SecScore(){
+  let angle = -90;
+  const radius = 100, stroke = 22, cx = 130, cy = 130;
+  const colors = ["#ff2d95","#ff4fa8","#ffd83d","#ffb14a","#5ce1ff","#8eecff"];
+  const segs = SCORE.map((s,i)=>{
+    const span = (s.w/100)*360;
+    const a0 = angle;
+    const a1 = angle + span - 2;
+    angle += span;
+    const toXY = a => { const r=a*Math.PI/180; return [cx+radius*Math.cos(r), cy+radius*Math.sin(r)]; };
+    const [x0,y0] = toXY(a0);
+    const [x1,y1] = toXY(a1);
+    const large = span > 180 ? 1 : 0;
+    return <path key={i} d={`M ${x0} ${y0} A ${radius} ${radius} 0 ${large} 1 ${x1} ${y1}`} stroke={colors[i]} strokeWidth={stroke} fill="none" style={{filter:"drop-shadow(0 0 6px "+colors[i]+")"}}/>;
+  });
+  return (
+    <div className="section" id="score">
+      <div className="kicker">08 · Gate scoring</div>
+      <h2 className="sec">Fidelity, weighted across six criteria.</h2>
+      <p>Every round emits a single value in [0, 10]. Default gate <code className="inl">9.0</code>. Raise to <code className="inl">9.5</code> for brand-critical landings; lower to <code className="inl">8.0</code> for quick prototypes.</p>
+      <div className="score-wrap">
+        <div className="score-viz">
+          <svg viewBox="0 0 260 260">
+            <circle cx={cx} cy={cy} r={radius} stroke="rgba(255,255,255,.08)" strokeWidth={stroke} fill="none"/>
+            {segs}
+          </svg>
+          <div className="score-center"><div style={{textAlign:"center"}}><div className="score-num">9.0</div><div className="score-lab">default gate</div></div></div>
+        </div>
+        <div>
+          <table className="tbl">
+            <thead><tr><th>criterion</th><th style={{textAlign:"right"}}>weight</th><th>method</th></tr></thead>
+            <tbody>
+              {SCORE.map(s=>(
+                <tr key={s.name}><td style={{color:"var(--ink)"}}>{s.name}</td><td className="num">{s.w}%</td><td>{s.method}</td></tr>
+              ))}
+            </tbody>
+          </table>
+          <Code title="score · one-line json (round 3)">{'{"r":3,"scores":{"col":9.2,"typ":8.8,"lay":9.1,"comp":8.5,"mot":8.0,"res":9.0},"total":8.9,"delta":+0.4}'}</Code>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SecTokens(){
+  return (
+    <div className="section" id="tokens">
+      <div className="kicker">09 · Token economy · spec</div>
+      <h2 className="sec yellow">Minimum state per round, by construction.</h2>
+      <p>Picasso's round-N context is bounded by design, not by prompt engineering. The conductor emits only delta state; inputs are hashed, outputs are fingerprinted, scrapes and renders are conditional. The technical surface is below — what ships, what each component is bounded to, and why.</p>
+
+      <h3 className="sub">Round-N payload · what the conductor actually sends</h3>
+      <table className="tbl">
+        <thead><tr><th>component</th><th>bound</th><th>mechanism</th></tr></thead>
+        <tbody>
+          <tr><td className="mono">DESIGN.md delta</td><td className="pink">changed sections only</td><td>Per-section sha256 compared to prior round. Unchanged sections never enter the prompt.</td></tr>
+          <tr><td className="mono">score.json</td><td className="pink">one compact line</td><td>Six criteria + total + delta, serialized to a single-line JSON object. No round history appended.</td></tr>
+          <tr><td className="mono">gaps.txt</td><td className="pink">3 lines × ~15 words</td><td>Goal-declared form: <code className="inl">current → target</code>. Bounded by schema, not by narration.</td></tr>
+          <tr><td className="mono">tokens.json</td><td className="pink">cache hit → skipped</td><td>Content-hash of the Claude Design HTML. Match ⇒ reuse prior extraction, no network call.</td></tr>
+          <tr><td className="mono">implementation brief</td><td className="pink">scoped subagent</td><td>Subagent receives only the delta + changed sections. Parent context is not forwarded.</td></tr>
+          <tr><td className="mono">mobile render</td><td className="pink">conditional</td><td>Skipped whenever the previous responsive score ≥ 8.0. Desktop render is always on.</td></tr>
+          <tr><td className="mono">screenshots</td><td className="pink">off-band</td><td>Written to <code className="inl">.pdl/rounds/NN/</code>, referenced by path. Never inlined in prompts.</td></tr>
+        </tbody>
+      </table>
+
+      <h3 className="sub">What a naive loop does instead</h3>
+      <p>For contrast — these are the anti-patterns the conductor avoids, regardless of task size, scope, or round count:</p>
+      <div className="grid c2" style={{marginTop:10}}>
+        <div className="card pink">
+          <div className="tag">ANTI-PATTERN · AVOIDED</div>
+          <h4>Full re-read per round</h4>
+          <p>Naive loops re-send the entire brief every round "for context." Picasso sends only sections whose hash changed.</p>
+        </div>
+        <div className="card pink">
+          <div className="tag">ANTI-PATTERN · AVOIDED</div>
+          <h4>Accumulated gap history</h4>
+          <p>Naive loops concatenate all prior feedback into every new prompt. Picasso keeps only the current <code className="inl">score.json</code> + <code className="inl">gaps.txt</code>.</p>
+        </div>
+        <div className="card pink">
+          <div className="tag">ANTI-PATTERN · AVOIDED</div>
+          <h4>Inlined full-res screenshots</h4>
+          <p>Naive loops embed screenshots directly in prompts. Picasso stores them on disk and passes paths to scoring tools.</p>
+        </div>
+        <div className="card pink">
+          <div className="tag">ANTI-PATTERN · AVOIDED</div>
+          <h4>Re-scrape unchanged references</h4>
+          <p>Naive loops re-scrape the design source every round. Picasso hashes the HTML and skips extraction on match.</p>
+        </div>
+      </div>
+
+      <h3 className="sub">Built-in mechanisms · always on</h3>
+      <div className="grid c4">
+        {[
+          ["1","Structured prompts",     "Key:value blocks in place of prose; schema-bounded."],
+          ["2","Content-hash cache",     "sha256 of scrape source; skip on match."],
+          ["3","Fingerprint dedup",      "hash(tokens+score) identical ⇒ STAGNATED, exit."],
+          ["4","Lazy DESIGN.md",         "Per-section read; only changed sections prompted."],
+          ["5","Model routing",          "Fast for deterministic scoring, standard for gap synthesis."],
+          ["6","Adaptive rendering",     "Mobile render conditional on prior responsive score."],
+          ["7","Zero-context subagent",  "Scoped brief only; parent context not forwarded."],
+          ["8","Idempotent writes",      "sha256 of target vs pending; unchanged files untouched."],
+          ["9","Trajectory abort",       "Early exit when best + remaining·step < gate."],
+          ["10","APPROVED pruning",      "Intermediate artifacts removed on final; only APPROVED.md + final PNG kept."],
+        ].map(([n,t,d])=>(
+          <div className="card" key={n}><div className="tag">{String(n).padStart(2,"0")}</div><h4>{t}</h4><p>{d}</p></div>
+        ))}
+      </div>
+
+      <Code title="round-N payload · illustrative schema">
+<span className="com">{"# delta-only; every field is bounded or conditional"}</span>{"\n"}
+&#123;{"\n"}
+{"  "}<span className="str">"round"</span>: N,{"\n"}
+{"  "}<span className="str">"design_md_delta"</span>: [ <span className="com">{"# only changed sections"}</span>{"\n"}
+{"    "}<span className="str">"Typography"</span>, <span className="str">"Components"</span>{"\n"}
+{"  "}],{"\n"}
+{"  "}<span className="str">"tokens_cache"</span>: &#123; <span className="str">"hit"</span>: <span className="ok">true</span>, <span className="str">"sha256"</span>: <span className="str">"a3f..."</span> &#125;,{"\n"}
+{"  "}<span className="str">"score"</span>: &#123; <span className="str">"col"</span>:9.2, <span className="str">"typ"</span>:8.8, <span className="str">"lay"</span>:9.1, <span className="str">"comp"</span>:8.5, <span className="str">"mot"</span>:8.0, <span className="str">"res"</span>:9.0, <span className="str">"total"</span>:8.9 &#125;,{"\n"}
+{"  "}<span className="str">"gaps"</span>: [ <span className="com">{"# 3 × ~15 words, goal-declared"}</span>{"\n"}
+{"    "}<span className="str">"motion.hero: 400ms → 600ms ease-out"</span>,{"\n"}
+{"    "}<span className="str">"typography.body: lh 1.4 → 1.6"</span>,{"\n"}
+{"    "}<span className="str">"colors.cta:hover: absent → #D4A857"</span>{"\n"}
+{"  "}],{"\n"}
+{"  "}<span className="str">"render"</span>: &#123; <span className="str">"desktop"</span>: <span className="ok">true</span>, <span className="str">"mobile"</span>: <span className="warn">false</span> &#125;  <span className="com">{"# prior responsive ≥ 8.0"}</span>{"\n"}
+&#125;
+      </Code>
+    </div>
+  );
+}
+
+function SecBackpressure(){
+  return (
+    <div className="section" id="backpressure">
+      <div className="kicker">10 · Context backpressure</div>
+      <h2 className="sec cyan">Five levels, one graceful exit.</h2>
+      <p>The conductor watches session context and degrades step-by-step. No abrupt failures, no silent truncation.</p>
+      <div className="meter">
+        {BP.map((b,i)=>(
+          <div className={"bar l"+(i+1)} key={b.n}><div className="r">{b.r}</div><div className="n">{b.n}</div></div>
+        ))}
+      </div>
+      <div className="grid c2" style={{marginTop:14}}>
+        {BP.map(b=>(<div className="card" key={b.n}><div className="tag">{b.r} · {b.n}</div><p>{b.s}</p></div>))}
+      </div>
+      <Code title="checkpoint · paused">{'{"ts":"2026-04-20T10:00:00Z","round":4,"last_score":8.7,"reason":"context_95pct"}'}</Code>
+    </div>
+  );
+}
+
+function SecModes(){
+  return (
+    <div className="section" id="modes">
+      <div className="kicker">11 · Five modes</div>
+      <h2 className="sec">The primitive is multi-shape.</h2>
+      <p>One conductor drives five workflows. Pick by task shape; scope presets set gate + rounds in one flag.</p>
+      <div className="modes-grid">
+        {MODES.map(m=>(
+          <div className={"mode " + (m.def?"def":"")} key={m.flag}>
+            {m.def && <div className="def-tag">DEFAULT</div>}
+            <div className="flag">{m.flag}</div>
+            <h4>{m.name}</h4>
+            <p>{m.desc}</p>
+            <div className="use">{m.use}</div>
+          </div>
+        ))}
+      </div>
+      <h3 className="sub">Scope presets</h3>
+      <table className="tbl">
+        <thead><tr><th>scope</th><th style={{textAlign:"right"}}>gate</th><th style={{textAlign:"right"}}>rounds</th><th>fallback manual</th><th>use for</th></tr></thead>
+        <tbody>
+          {SCOPES.map(([s,g,r,f,u])=>(
+            <tr key={s}><td className="mono">{s}</td><td className="num">{g}</td><td className="num">{r}</td><td className="pink">{f}</td><td>{u}</td></tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function SecKarpathy(){
+  return (
+    <div className="section" id="karpathy">
+      <div className="kicker">12 · Foundational principles</div>
+      <h2 className="sec yellow">Four principles, baked into the conductor.</h2>
+      <p>Picasso's loop discipline stands on the shoulders of prior public work — Andrej Karpathy's notes on LLM coding pitfalls, Simon Willison's writing on small reviewable diffs, and Anthropic's own cookbook on agentic loops. Each principle maps to a concrete mechanism in PHASE 2, the subagent dispatcher, the gap format, and the gate.</p>
+      <div className="karp-grid">
+        {KARP.map(k=>(
+          <div className="karp" key={k.n}>
+            <div className="n">{k.n}</div>
+            <h4>{k.h}</h4>
+            <p>{k.p}</p>
+            <div className="how">{k.how}</div>
+            <div className="cred">{k.cred}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SecPatterns(){
+  return (
+    <div className="section" id="patterns">
+      <div className="kicker">13 · Orchestration patterns</div>
+      <h2 className="sec cyan">Nine patterns doing the heavy lifting.</h2>
+      <p>Each pattern earns its place by cutting tokens, rounds, or failure modes. All documented; nothing proprietary.</p>
+      <div className="pat-grid">
+        {PATTERNS.map(p=>(
+          <div className="pat" key={p.n}><div className="n">{p.n}</div><h4>{p.h}</h4><p>{p.p}</p><div className="src">{p.src}</div></div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SecVariants(){
+  return (
+    <div className="section" id="variants">
+      <div className="kicker">14 · What ships in the release</div>
+      <h2 className="sec">One package, installs into Claude Code.</h2>
+      <p>Picasso Bridge is a single public repository. Clone it, run the oneliner, point Claude Code at it — that is the entire installation. Nothing else is required.</p>
+      <div className="var-grid">
+        <div className="var pub">
+          <div className="tag">GIT RELEASE · PUBLIC · MIT</div>
+          <h3>picasso-bridge</h3>
+          <p>One slash command, one subagent, six hooks, two small shell libraries, and the docs you are reading. No private endpoints, no external services beyond the two MCP dependencies.</p>
+          <ul>
+            <li><code>commands/picasso.md</code> — slash-command spec, flag parsing, delegation</li>
+            <li><code>agents/pdl-conductor.md</code> — loop owner · 4 phases · state machine</li>
+            <li><code>hooks/pdl-*.sh</code> — six lifecycle hooks, all extendable</li>
+            <li><code>lib/budget-preflight.sh</code> · <code>lib/context-guard.sh</code> · <code>lib/fingerprint.sh</code></li>
+            <li><code>docs/DESIGN-PATTERNS.md</code> · <code>TOKEN-OPTIMIZATION.md</code> · <code>GATE-SCORING.md</code> · <code>PROMPT-TEMPLATES.md</code> · <code>HOOKS.md</code></li>
+            <li><code>scripts/install-oneliner.sh</code> · <code>scripts/verify.sh</code></li>
+            <li><code>examples/hero-cinematic.md</code> · <code>examples/tokens.json</code></li>
+          </ul>
+        </div>
+        <div className="var priv">
+          <div className="tag">RUNTIME ARTIFACTS · NOT IN GIT</div>
+          <h3>.pdl/ — generated at run</h3>
+          <p>Everything the conductor writes during a session lands under a local <code>.pdl/</code> folder in the project. It is git-ignored by default. Safe to delete; Picasso rebuilds from the next run.</p>
+          <ul>
+            <li><code>DESIGN.md</code> — the contract · nine sections, regenerated from prompt + ASSUMPTIONS</li>
+            <li><code>rounds/NN/</code> — <code>tokens.json</code>, <code>preview.png</code>, <code>score.json</code>, <code>gaps.txt</code></li>
+            <li><code>checkpoint.json</code> — written on PAUSED; resumable in a new session</li>
+            <li><code>economy.jsonl</code> — one line per round, for post-mortem and budget tracking</li>
+            <li><code>final-design.png</code> · <code>APPROVED.md</code> — written only on a passing gate</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SecHooks(){
+  return (
+    <div className="section" id="hooks">
+      <div className="kicker">15 · Lifecycle hooks</div>
+      <h2 className="sec">Six extension points.</h2>
+      <p>Drop shell scripts at <code className="inl">~/.claude/hooks/pdl-*.sh</code>. JSON on stdin; exit code is the signal.</p>
+      <div className="hooks">
+        {HOOKS.map(([h,d,f])=>(
+          <div className="hook" key={h}><div className="h">{h}</div><p>{d}</p><div className="fires">fires on: {f}</div></div>
+        ))}
+      </div>
+      <Code title="hook stub · ~/.claude/hooks/pdl-post-round.sh">
+<span className="com">{"#!/usr/bin/env bash"}</span>{"\n"}
+<span className="com">{"# stdin JSON: { round, score, gate, artifacts_dir, dir }"}</span>{"\n"}
+<span className="cmd">payload</span>={"="}<span className="str">{'"$(cat)"'}</span>{"\n"}
+<span className="cmd">score</span>=<span className="str">{'$(jq -r .score <<<"$payload")'}</span>{"\n"}
+<span className="cmd">echo</span> <span className="str">{'"round scored $score"'}</span>{" >> "}.pdl/log{"\n"}
+<span className="cmd">exit</span> 0  <span className="com">{"# 0 = continue · 2 = force APPROVED · 3 = force abort"}</span>
+      </Code>
+    </div>
+  );
+}
+
+function SecTree(){
+  return (
+    <div className="section" id="tree">
+      <div className="kicker">16 · Repository layout</div>
+      <h2 className="sec yellow">Every file, its job.</h2>
+      <p>Shallow and typed. If something looks like a framework, it is not one.</p>
+      <div className="tree">
+<div><span className="dir">picasso-bridge/</span></div>
+<div>├── <span className="dir">commands/</span></div>
+<div>│   └── <span className="hot">picasso.md</span>              <span className="anno"># slash-command spec · flags · delegation</span></div>
+<div>├── <span className="dir">agents/</span></div>
+<div>│   └── <span className="hot">pdl-conductor.md</span>         <span className="anno"># the loop owner · 4 phases</span></div>
+<div>├── <span className="dir">hooks/</span></div>
+<div>│   ├── <span className="f">pdl-autodetect.sh</span>        <span className="anno"># UserPromptSubmit</span></div>
+<div>│   ├── <span className="f">pdl-pre-round.sh</span>         <span className="anno"># budget + artifact guard</span></div>
+<div>│   ├── <span className="f">pdl-post-round.sh</span>        <span className="anno"># economy.jsonl append · force-exit codes</span></div>
+<div>│   ├── <span className="f">pdl-stagnation.sh</span>        <span className="anno"># user-definable · score plateau</span></div>
+<div>│   ├── <span className="f">pdl-approved.sh</span>          <span className="anno"># user-definable · auto-commit / PR</span></div>
+<div>│   └── <span className="f">pdl-failed.sh</span>            <span className="anno"># user-definable · cleanup</span></div>
+<div>├── <span className="dir">lib/</span></div>
+<div>│   ├── <span className="f">budget-preflight.sh</span>      <span className="anno"># est vs cap · pre-round abort</span></div>
+<div>│   ├── <span className="f">context-guard.sh</span>         <span className="anno"># 5-level backpressure</span></div>
+<div>│   └── <span className="f">fingerprint.sh</span>           <span className="anno"># sha256(tokens + score)</span></div>
+<div>├── <span className="dir">docs/</span></div>
+<div>│   ├── <span className="f">DESIGN-PATTERNS.md</span>       <span className="anno"># 9 orchestration patterns</span></div>
+<div>│   ├── <span className="f">TOKEN-OPTIMIZATION.md</span>    <span className="anno"># 10 optimizations, before/after</span></div>
+<div>│   ├── <span className="f">GATE-SCORING.md</span>          <span className="anno"># 6 criteria · ΔE · grid · weights</span></div>
+<div>│   ├── <span className="f">PROMPT-TEMPLATES.md</span>      <span className="anno"># DESIGN.md 9-section schema</span></div>
+<div>│   └── <span className="f">HOOKS.md</span>                 <span className="anno"># stdin/stdout contract per hook</span></div>
+<div>├── <span className="dir">scripts/</span></div>
+<div>│   ├── <span className="hot">install-oneliner.sh</span>      <span className="anno"># curl | bash target · --wizard</span></div>
+<div>│   └── <span className="f">verify.sh</span>                <span className="anno"># picasso-bridge verify [--smoke]</span></div>
+<div>├── <span className="dir">examples/</span></div>
+<div>│   ├── <span className="f">hero-cinematic.md</span>        <span className="anno"># sample DESIGN.md</span></div>
+<div>│   └── <span className="f">tokens.json</span>              <span className="anno"># sample extracted tokens</span></div>
+<div>├── <span className="f">LICENSE</span>                    <span className="anno"># MIT</span></div>
+<div>└── <span className="hot">README.md</span>                  <span className="anno"># short; links here</span></div>
+<div>&nbsp;</div>
+<div><span className="anno"># at runtime (not in git)</span></div>
+<div><span className="dir">.pdl/</span></div>
+<div>├── <span className="dir">rounds/</span></div>
+<div>│   ├── <span className="dir">01/</span>   <span className="anno">tokens.json · preview.png · score.json · gaps.txt</span></div>
+<div>│   └── <span className="dir">02/</span>   <span className="anno">...</span></div>
+<div>├── <span className="f">DESIGN.md</span>                 <span className="anno"># the contract · 9 sections</span></div>
+<div>├── <span className="f">checkpoint.json</span>           <span className="anno"># set on PAUSED</span></div>
+<div>├── <span className="f">economy.jsonl</span>             <span className="anno"># one line per round, ever</span></div>
+<div>└── <span className="f">final-design.png</span>          <span className="anno"># written on APPROVED</span></div>
+      </div>
+    </div>
+  );
+}
+
+function SecInstall(){
+  return (
+    <div className="section" id="install">
+      <div className="kicker">17 · Install</div>
+      <h2 className="sec yellow">One line. Wizard optional.</h2>
+      <p>The oneliner writes the command, the subagent, and the hooks into your Claude Code user directory, patches <code className="inl">settings.json</code> (with a timestamped backup), and runs a smoke verify.</p>
+      <Code title="oneliner · posix">
+<span className="com">{"# default install"}</span>{"\n"}
+<span className="cmd">curl</span> <span className="flag">-fsSL</span> <span className="str">https://cdn.jsdelivr.net/gh/&lt;repo&gt;@main/scripts/install-oneliner.sh</span> | <span className="cmd">bash</span>{"\n\n"}
+<span className="com">{"# interactive wizard — gate · rounds_max · hook auto-wiring · budget cap"}</span>{"\n"}
+<span className="cmd">curl</span> <span className="flag">-fsSL</span> <span className="str">...install-oneliner.sh</span> | <span className="cmd">bash</span> <span className="flag">-s --</span> <span className="flag">--wizard</span>{"\n\n"}
+<span className="com">{"# verify + offline smoke"}</span>{"\n"}
+<span className="cmd">picasso-bridge</span> verify{"\n"}
+<span className="cmd">picasso-bridge</span> verify <span className="flag">--smoke</span>
+      </Code>
+      <h3 className="sub">What install.sh does, in order</h3>
+      <div className="grid c3">
+        <div className="card"><div className="tag">01</div><h4>Clone</h4><p>Into <code className="inl">~/.claude/pdl-bridge/</code>. Idempotent — re-running pulls a fast-forward update.</p></div>
+        <div className="card"><div className="tag">02</div><h4>Copy agents + hooks</h4><p><code className="inl">agents/</code> and <code className="inl">hooks/</code> land under <code className="inl">~/.claude/</code>. User hooks preserved.</p></div>
+        <div className="card"><div className="tag">03</div><h4>Patch settings.json</h4><p>Registers slash command + hooks. Timestamped backup at <code className="inl">settings.json.bak.&lt;ts&gt;</code>.</p></div>
+        <div className="card"><div className="tag">04</div><h4>Write config</h4><p><code className="inl">~/.claude/pdl/config.json</code> · gate · rounds_max · budget cap · model routing.</p></div>
+        <div className="card"><div className="tag">05</div><h4>Register PATH shim</h4><p><code className="inl">picasso-bridge</code> CLI for verify + upgrade subcommands.</p></div>
+        <div className="card"><div className="tag">06</div><h4>Smoke verify</h4><p>Runs offline fixtures · MCP connection check · reports green / red per component.</p></div>
+      </div>
+    </div>
+  );
+}
+
+function SecDemo(){
+  return (
+    <div className="section" id="demo">
+      <div className="kicker">18 · End-to-end run</div>
+      <h2 className="sec cyan">What a session looks like.</h2>
+      <p>An illustrative trace. Exact numbers vary by task, scope, and gate — the shape is stable.</p>
+      <div className="term-demo">
+<div className="ln"><span style={{color:"var(--cyan)"}}>$</span> <span style={{color:"var(--ink)"}}>/picasso</span> <span style={{color:"var(--yellow)"}}>--design-loop</span> <span style={{color:"var(--pink-glow)"}}>"hero cinematic for B2B SaaS, dark elite"</span> <span style={{color:"var(--yellow)"}}>--scope complex</span></div>
+<div className="ln" style={{color:"#b9a3ad"}}>ASSUMPTIONS:</div>
+<div className="ln">  colors:     derived [primary:#0A0F1C accent:#D4A857] from task mood</div>
+<div className="ln">  typography: derived [Canela/700 + Inter/400] from B2B signal</div>
+<div className="ln">  components: assumed [hero nav cta trust-bar] from "SaaS" context</div>
+<div className="ln" style={{color:"#b9a3ad"}}>Proceeding unless you correct any of the above.</div>
+<div className="ln">&nbsp;</div>
+<div className="ln"><span style={{color:"var(--yellow)"}}>[PDL]</span> Phase 1: Setup</div>
+<div className="ln">  Chrome MCP:     <span style={{color:"var(--green)"}}>connected</span></div>
+<div className="ln">  webdesign-mcp:  <span style={{color:"var(--green)"}}>connected</span></div>
+<div className="ln">  claude.ai:      <span style={{color:"var(--green)"}}>authenticated (Pro)</span></div>
+<div className="ln">  Budget:         est. 4.76¢ / cap 100¢ — <span style={{color:"var(--green)"}}>OK</span></div>
+<div className="ln">&nbsp;</div>
+<div className="ln"><span style={{color:"var(--yellow)"}}>[PDL]</span> Phase 2: Brief → DESIGN.md (9 sections, 387 tok)</div>
+<div className="ln"><span style={{color:"var(--yellow)"}}>[PDL]</span> Round 1/7 — requesting Claude Design...</div>
+<div className="ln">  browser_batch: navigate → form_input → wait → screenshot(800px) → get_text</div>
+<div className="ln">  scrape: tokens.json extracted (hash cached)</div>
+<div className="ln">  implement: subagent dispatched — §Typography §Components (changed)</div>
+<div className="ln">  render: desktop 1280px | mobile: skipped</div>
+<div className="ln">  score: <span style={{color:"var(--pink-glow)"}}>{'{"r":1,"total":8.0,"delta":0}'}</span></div>
+<div className="ln">  gaps:</div>
+<div className="ln">    motion: hero fade-up 400ms → 600ms ease-out</div>
+<div className="ln">    typography: body lh 1.4 → 1.6</div>
+<div className="ln">    colors: accent absent on CTA hover → #D4A857 hover</div>
+<div className="ln">&nbsp;</div>
+<div className="ln"><span style={{color:"var(--yellow)"}}>[PDL]</span> Round 2/7 — delta prompt (98 tok)</div>
+<div className="ln">  cache: MISS (tokens changed) → scrape_reference called</div>
+<div className="ln">  score: <span style={{color:"var(--pink-glow)"}}>{'{"r":2,"total":8.8,"delta":+0.8}'}</span></div>
+<div className="ln">&nbsp;</div>
+<div className="ln"><span style={{color:"var(--yellow)"}}>[PDL]</span> Round 3/7</div>
+<div className="ln">  cache: <span style={{color:"var(--amber)"}}>HIT</span> — tokens unchanged, reusing previous tokens.json</div>
+<div className="ln">  score: <span style={{color:"var(--pink-glow)"}}>{'{"r":3,"total":9.1,"delta":+0.3}'}</span></div>
+<div className="ln" style={{color:"var(--green)"}}>  GATE MET: 9.1 ≥ 9.0</div>
+<div className="ln">&nbsp;</div>
+<div className="ln"><span style={{color:"var(--yellow)"}}>[PDL]</span> <span style={{color:"var(--green)"}}>APPROVED</span> — 3 rounds, gate 9.0</div>
+<div className="ln">  final screenshot: .pdl/final-design.png (1440px)</div>
+<div className="ln">  artifacts pruned: round-1/ round-2/ deleted</div>
+<div className="ln">  APPROVED.md written</div>
+      </div>
+    </div>
+  );
+}
+
+function SecChangelog(){
+  return (
+    <div className="section" id="changelog">
+      <div className="kicker">19 · Changelog</div>
+      <h2 className="sec yellow">From v0.1 seed to v1.0 first release.</h2>
+      <p>What the bridge looked like at each step, and what landed here at v1.0 — now a single combined package covering the full control plane.</p>
+      <div className="chl">
+        {CHANGELOG.map(c=>(
+          <div className={"row "+c.tone} key={c.v}>
+            <div>
+              <div className="v">{c.v}</div>
+              <div className="t">{c.t}</div>
+            </div>
+            <div><ul>{c.items.map((it,i)=>(<li key={i}>{it}</li>))}</ul></div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SecIcons(){
+  return (
+    <div className="section" id="icons">
+      <div className="kicker">20 · Icon set</div>
+      <h2 className="sec">Sixteen marks, one visual register.</h2>
+      <p>Used throughout docs pages and the README. Line art, glowing in pink / yellow / cyan — no fills, no decoration.</p>
+      <div className="icon-grid">
+        {ICONS.map(i=>(
+          <div className="ico" key={i.k}><svg viewBox="0 0 28 28">{i.svg}</svg><div className="lb">{i.k}</div></div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function App(){
+  return (
+    <>
+      <Neon/>
+      <TOC/>
+      <Stats/>
+      <div className="docs">
+        <SecAbout/>
+        <SecWhy/>
+        <SecQuick/>
+        <SecReqs/>
+        <SecRefs/>
+        <SecArch/>
+        <SecFlow/>
+        <SecScore/>
+        <SecTokens/>
+        <SecBackpressure/>
+        <SecModes/>
+        <SecKarpathy/>
+        <SecPatterns/>
+        <SecVariants/>
+        <SecHooks/>
+        <SecTree/>
+        <SecInstall/>
+        <SecDemo/>
+        <SecChangelog/>
+        <SecIcons/>
+        <div className="foot">
+          glowing since 2026 · <span>picasso-bridge</span> v1.0 · MIT · an independent orchestrator
+        </div>
+      </div>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
